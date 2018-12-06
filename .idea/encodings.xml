@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Encoding" defaultCharsetForPropertiesFiles="GBK" addBOMForNewFiles="with NO BOM">
+    <file url="file://$PROJECT_DIR$/src/main/java/config/Config.java" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/src/main/java/seg/PreProcess.java" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/src/main/java/seg/Segment.java" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/src/main/java/trie/get_work/MyDoubleArrayTrie.java" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/src/main/java/util/HanUtils.java" charset="GBK" />
+    <file url="file://$PROJECT_DIR$/src/test/java/trie/DoubleArrayTrieTest.java" charset="GBK" />
+    <file url="PROJECT" charset="GBK" />
+  </component>
+</project>
