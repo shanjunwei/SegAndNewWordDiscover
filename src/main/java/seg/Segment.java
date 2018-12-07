@@ -38,7 +38,7 @@ public class Segment {
 
         //  将信息熵 互信息等统计量加入到过滤决策机制中
         Segment segment = new Segment();
-        List<String>  result =   segment.segment("细蒙蒙的雨丝夹着一星半点的雪花");
+        List<String>  result =   segment.segment("陪同考察企业并看望慰问职工的国务院有关部门和北京市负责人还有");
         result.forEach(it->{
             System.out.print("####"+it);
         });

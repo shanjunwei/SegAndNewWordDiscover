@@ -14,8 +14,8 @@ public class Config {
     public  final static double MIN_LEFT_ENTROPY = 0.01;   // 最小左熵,用于左邻熵过滤
     public  final static double MIN_RIGHT_ENTROPY = 0.01;   // 最小右熵,用于右邻熵过滤
 
-    public static String Novelpath = "D:\\HanLP\\novel\\平凡的世界.txt";   // 小说文本路径
-    public static String DebugPath = "D:\\HanLP\\平凡的世界\\666.txt";   //  debug 信息输出
+    public static String NovelPath = "E:\\Code\\Java\\SegEvaluate\\data\\test-text.txt"; // 语料入口
+    public static String DebugPath = "D:\\HanLP\\人民日报\\666.txt";   //  debug 信息输出
     /**
      * 字符类型对应表
      */

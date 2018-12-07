@@ -1,10 +1,11 @@
 package seg;
 
+
 import config.Config;
 import org.apache.commons.lang.StringUtils;
-import util.FileUtils;
 import util.HanUtils;
 
+import java.io.*;
 import java.util.*;
 
 import static config.Config.MAX_STOP_WORD_LEN;
@@ -17,9 +18,34 @@ public class PreProcess {
     public static String novel_text;
     public static LinkedHashSet<String> seg_result = new LinkedHashSet<>();   // 切词结果集
 
-    public void initData() {   // 数据预处理
+
+    public void initData() {   // 数据预处理,针对人民日报语料做一些修改
+        try {
+            // 以utf-8读取文件
+            FileInputStream fis = new FileInputStream(Config.NovelPath);
+            InputStreamReader reader = new InputStreamReader(fis, "UTF-8");
+            BufferedReader br = new BufferedReader(reader);
+            String str = null;
+            while ((str = br.readLine()) != null) {
+                if(StringUtils.isNotBlank(str)){
+                    LinkedHashSet<String> termList = HanUtils.segment(str, true);
+                    if (termList != null) {
+                        seg_result.addAll(termList);
+                    }
+                }
+            }
+            br.close();
+            reader.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+   /* public void initData2() {   // 数据预处理
         // 读取小说文本
-        novel_text = FileUtils.readFileToString(Config.Novelpath);
+        novel_text = FileUtils.readFileToString(Config.NovelPath);
         String[] replaceNonChinese = HanUtils.replaceNonChineseCharacterAsBlank(novel_text);  // 去掉非中文字符   里边没有逗号
         // 再拆分停用词
         System.out.println("去非中文后的字符串数量" + replaceNonChinese.length + "   ");
@@ -40,7 +66,7 @@ public class PreProcess {
         }
         System.out.println("切分字串的个数" + seg_result.size());
         System.out.println();
-    }
+    }*/
 
     // 去掉停用词，去掉停用词从低到高
     private String[] segmentByStopWordsAes(String text) {
