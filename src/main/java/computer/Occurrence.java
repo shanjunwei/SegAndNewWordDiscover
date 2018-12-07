@@ -62,6 +62,9 @@ public class Occurrence {
             totalCount = totalCount + wcMap.get(seg);    // 计算总词频
         }
         for (String seg : segSet) {
+            if (seg.equals("江湖")) {
+                System.out.println("=============");
+            }
             // 1. 计算信息熵
             double rightEntropy = computeRightEntropy(seg);
             totalRE = totalRE + rightEntropy;

@@ -2,7 +2,7 @@ package trie;
 
 /**
  * Created by bruce_shan on 2018/12/4 20:33.
- * Corporation CSU Software
+ * Corporation CSU Software  这是一个字典树demo,并没有在项目中用到
  */
 public class Trie {
     private TrieNode root;

@@ -435,54 +435,6 @@ public class BinTrie<V> extends BaseNode<V> implements ITrie<V>, Externalizable
 
         return true;
     }*/
-
-    /**
-     * 只加载值，此时相当于一个set
-     *
-     * @param path
-     * @return
-     */
- /*   public boolean load(String path)
-    {
-        byte[] bytes = IOUtil.readBytes(path);
-        if (bytes == null) return false;
-        _ValueArray valueArray = new _EmptyValueArray();
-        ByteArray byteArray = new ByteArray(bytes);
-        for (int i = 0; i < child.length; ++i)
-        {
-            int flag = byteArray.nextInt();
-            if (flag == 1)
-            {
-                child[i] = new Node<V>();
-                child[i].walkToLoad(byteArray, valueArray);
-            }
-        }
-        size = -1;  // 不知道有多少
-
-        return true;
-    }*/
-
-/*    public boolean load(ByteArray byteArray, _ValueArray valueArray)
-    {
-        for (int i = 0; i < child.length; ++i)
-        {
-            int flag = byteArray.nextInt();
-            if (flag == 1)
-            {
-                child[i] = new Node<V>();
-                child[i].walkToLoad(byteArray, valueArray);
-            }
-        }
-        size = valueArray.value.length;
-
-        return true;
-    }*/
-
- /*   public boolean load(ByteArray byteArray, V[] value)
-    {
-        return load(byteArray, newValueArray().setValue(value));
-    }
-*/
     public _ValueArray newValueArray()
     {
         return new _ValueArray();
