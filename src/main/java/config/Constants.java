@@ -14,7 +14,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class Constants {
     public static  String NOVEL;
     public static HashSet stopWordSet = new HashSet();     // 停用词哈希表
-    public static Map<String, Integer> wcMap = new ConcurrentHashMap<>();   // 用于统计词频
+    public static Map<String, Integer> wcMap = new ConcurrentHashMap<>();   // 用于存储切分结果和统计词频
 
     public static Map<String, Integer> singWordCountMap = new ConcurrentHashMap<>();   // 单字词频
 
@@ -29,7 +29,7 @@ public class Constants {
     public static BinTrie<Integer> trieRight = new BinTrie<>();
 
     static {
-        initStopWords();
+       // initStopWords();
     }
 
 

@@ -10,7 +10,6 @@ import java.util.Set;
 
 import static config.Config.MIN_PROBABILITY;
 import static config.Constants.*;
-import static seg.Segment.debug_Info;
 
 /**
  * 词共现 统计量计算,包括 互信息,左右熵
@@ -50,21 +49,18 @@ public class Occurrence {
     /**
      * 添加所有切分词  计算互信息 信息熵等统计量 ,对外提供这一个入口即可
      */
-    public void addAllSegAndCompute(Set<String> segSet, Map<String, Integer> wcMap) {
+    public void addAllSegAndCompute(Map<String, Integer> wcMap) {
         System.out.println("计算统计量中-->");
         int count = 0;
         long t1 = System.currentTimeMillis();
 
-        totalTerm = segSet.size();
-        for (String seg : segSet) {
-            trieRight.put(seg, wcMap.get(seg));
-            trieLeft.put(HanUtils.reverseString(seg), wcMap.get(seg));
+        totalTerm = wcMap.size();
+        for (String seg : wcMap.keySet()) {
+            trieRight.put(seg, wcMap.get(seg));     // 右前缀字典树
+            trieLeft.put(HanUtils.reverseString(seg), wcMap.get(seg));  // 左前缀字典树
             totalCount = totalCount + wcMap.get(seg);    // 计算总词频
         }
-        for (String seg : segSet) {
-            if (seg.equals("江湖")) {
-                System.out.println("=============");
-            }
+        for (String seg : wcMap.keySet()) {
             // 1. 计算信息熵
             double rightEntropy = computeRightEntropy(seg);
             totalRE = totalRE + rightEntropy;
@@ -169,8 +165,8 @@ public class Occurrence {
 
         term.score = term.mi / totalMI + term.le / totalLE + term.re / totalRE;   // 归一化
 
-        debug_Info.append(seg + "   mi->   " + term.mi + " le->" + term.le + " re->" + term.re + " wc->" + term.count + " score->" + term.score + "\n");
-        System.out.println(seg + "   mi->   " + term.mi + " le->" + term.le + " re->" + term.re + " wc->" + term.count + " score->" + term.score + "\n");
+      //  debug_Info.append(seg + "   mi->   " + term.mi + " le->" + term.le + " re->" + term.re + " wc->" + term.count + " score->" + term.score + "\n");
+     //   System.out.println(seg + "   mi->   " + term.mi + " le->" + term.le + " re->" + term.re + " wc->" + term.count + " score->" + term.score + "\n");
         //  term.score *= totalTerm;  // 这个先不加看看结果
         return term.score;
     }

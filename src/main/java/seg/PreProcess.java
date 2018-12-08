@@ -6,7 +6,6 @@ import org.apache.commons.lang.StringUtils;
 import util.HanUtils;
 
 import java.io.*;
-import java.util.*;
 
 import static config.Config.MAX_STOP_WORD_LEN;
 import static config.Constants.stopWordSet;
@@ -16,8 +15,6 @@ import static config.Constants.stopWordSet;
  */
 public class PreProcess {
     public static String novel_text;
-    public static LinkedHashSet<String> seg_result = new LinkedHashSet<>();   // 切词结果集
-
 
     public void initData() {   // 数据预处理,针对人民日报语料做一些修改
         try {
@@ -28,10 +25,7 @@ public class PreProcess {
             String str = null;
             while ((str = br.readLine()) != null) {
                 if(StringUtils.isNotBlank(str)){
-                    LinkedHashSet<String> termList = HanUtils.segment(str, true);
-                    if (termList != null) {
-                        seg_result.addAll(termList);
-                    }
+                    HanUtils.FMMSegment(str, true);   // FMM算法切分候选词并统计词频
                 }
             }
             br.close();
@@ -42,32 +36,6 @@ public class PreProcess {
             e.printStackTrace();
         }
     }
-
-   /* public void initData2() {   // 数据预处理
-        // 读取小说文本
-        novel_text = FileUtils.readFileToString(Config.NovelPath);
-        String[] replaceNonChinese = HanUtils.replaceNonChineseCharacterAsBlank(novel_text);  // 去掉非中文字符   里边没有逗号
-        // 再拆分停用词
-        System.out.println("去非中文后的字符串数量" + replaceNonChinese.length + "   ");
-        for (int i = 0; i < replaceNonChinese.length; i++) {
-            String textDS = replaceNonChinese[i];   // 这里没有逗号
-            if (StringUtils.isNotBlank(textDS) && textDS.length() != 1) {
-                //String[] withoutStopWords = HanUtils.segmentByStopWordsDes(textDS);   // 将以非中文字符分割后的结果再以停用词分割
-                // for (int j = 0; j < withoutStopWords.length; j++) {
-                // String text = withoutStopWords[j];
-                String text = textDS;
-                if (StringUtils.isNotBlank(text) && text.length() != 1) {
-                    LinkedHashSet<String> termList = HanUtils.segment(text, true);
-                    if (termList != null) {
-                        seg_result.addAll(termList);
-                    }
-                }
-            }
-        }
-        System.out.println("切分字串的个数" + seg_result.size());
-        System.out.println();
-    }*/
-
     // 去掉停用词，去掉停用词从低到高
     private String[] segmentByStopWordsAes(String text) {
         if (text.length() == 1) {
@@ -99,14 +67,31 @@ public class PreProcess {
         String[] seg_stop_result = temp.split(",");
         return seg_stop_result;
     }
-
-
-    public static String getNovel_text() {
-        return novel_text;
-    }
-
-    public static void main(String[] args) {
-        PreProcess preProcess = new PreProcess();
-        preProcess.initData();
-    }
 }
+
+
+
+   /* public void initData2() {   // 数据预处理
+        // 读取小说文本
+        novel_text = FileUtils.readFileToString(Config.NovelPath);
+        String[] replaceNonChinese = HanUtils.replaceNonChineseCharacterAsBlank(novel_text);  // 去掉非中文字符   里边没有逗号
+        // 再拆分停用词
+        System.out.println("去非中文后的字符串数量" + replaceNonChinese.length + "   ");
+        for (int i = 0; i < replaceNonChinese.length; i++) {
+            String textDS = replaceNonChinese[i];   // 这里没有逗号
+            if (StringUtils.isNotBlank(textDS) && textDS.length() != 1) {
+                //String[] withoutStopWords = HanUtils.segmentByStopWordsDes(textDS);   // 将以非中文字符分割后的结果再以停用词分割
+                // for (int j = 0; j < withoutStopWords.length; j++) {
+                // String text = withoutStopWords[j];
+                String text = textDS;
+                if (StringUtils.isNotBlank(text) && text.length() != 1) {
+                    LinkedHashSet<String> termList = HanUtils.segment(text, true);
+                    if (termList != null) {
+                        seg_result.addAll(termList);
+                    }
+                }
+            }
+        }
+        System.out.println("切分字串的个数" + seg_result.size());
+        System.out.println();
+    }*/

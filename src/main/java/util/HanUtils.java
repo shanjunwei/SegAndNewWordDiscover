@@ -15,9 +15,9 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static config.Config.MAX_STOP_WORD_LEN;
 import static config.Config.MAX_WORD_LEN;
-import static config.Constants.*;
+import static config.Constants.singWordCountMap;
+import static config.Constants.wcMap;
 
 /**
  * 汉字处理相关工具类
@@ -118,16 +118,12 @@ public class HanUtils {
         return seg_stop_result;
     }
 */
-
     // 切分词  FMM 算法
-    public static LinkedHashSet<String> segment(String text, boolean countWordFrequency) {
+    public static void FMMSegment(String text, boolean countWordFrequency) {
         // 额外统计单个字的词频
         wordCountSingleWord(text);
-
-        //  送进来的切先以停用词切分
-        LinkedHashSet<String> termList = new LinkedHashSet<>();
         if (text.length() == 1) {
-            return null;
+            return;
         }
         int temp_max_len = Math.min(text.length() + 1, MAX_WORD_LEN);
         int p = 0;
@@ -143,7 +139,6 @@ public class HanUtils {
                     break;
                 }
                 String strChar = text.substring(p, p + q);
-                termList.add(strChar);
                 // 统计词串的词频
                 if (countWordFrequency) {
                     if (wcMap.containsKey(strChar)) {
@@ -156,7 +151,45 @@ public class HanUtils {
             }
             p++;
         }
-        return termList;
+    }
+
+
+    // 切分词  FMM 算法
+    public static List<String> getFMMList(String text, boolean countWordFrequency) {
+        // 额外统计单个字的词频
+        wordCountSingleWord(text);
+        if (text.length() == 1) {
+            return null;
+        }
+        List<String> result = new ArrayList<>();
+        int temp_max_len = Math.min(text.length() + 1, MAX_WORD_LEN);
+        int p = 0;
+        while (p < text.length()) {
+            int q = 1;
+            while (q < temp_max_len) {  // 控制取词的长度
+                if (q == 1) {
+                    q++;
+                    continue;  // 长度为1略过,单个汉字不具有分词意义
+                }
+                // 取词串  p --> p+q
+                if (p + q > text.length()) {
+                    break;
+                }
+                String strChar = text.substring(p, p + q);
+                result.add(strChar);
+                // 统计词串的词频
+                if (countWordFrequency) {
+                    if (wcMap.containsKey(strChar)) {
+                        wcMap.put(strChar, wcMap.get(strChar) + 1);
+                    } else {
+                        wcMap.put(strChar, 1);
+                    }
+                }
+                q++;
+            }
+            p++;
+        }
+        return result;
     }
 
 
@@ -173,6 +206,8 @@ public class HanUtils {
 
 
     // 判断待添加进最终结果集的 分词是否与之前的重合
+
+    // 判断的逻辑再更改,判断重叠应该引入词在原来语句中的位置
     public static boolean hasNonCommonWithAllAddedResultSet(LinkedHashSet AddedResultSet, String key) {
         Iterator<String> iterator = AddedResultSet.iterator();
         while (iterator.hasNext()) {
