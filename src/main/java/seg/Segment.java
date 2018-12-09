@@ -28,10 +28,9 @@ public class Segment {
         //  将信息熵 互信息等统计量加入到过滤决策机制中
         Segment segment = new Segment();
         List<String> result = segment.segment("陪同考察企业并看望慰问职工的国务院有关部门和北京市负责人还有");
-        result.forEach(it -> {
-            System.out.print("####" + it);
-        });
-        System.out.println();
+        System.out.println(result);
+        List<String> result2 = segment.segment("据新华社北京12月30日电西藏自治区政府副主席泽仁桑珠今天在北京接受记者采访时介绍说");
+        System.out.println(result2);
     }
 
     /**
@@ -55,7 +54,6 @@ public class Segment {
         for (String seg : result) {
             text = text.replaceAll(seg, " " + seg + " ");
         }
-        System.out.println(text.trim());
         return text;
     }
 
@@ -118,7 +116,7 @@ public class Segment {
         return final_result;
     }
 
-    //  第一轮晒筛选
+    //  第一轮筛选
     private String getTopCandidateFromSet(List<String> termList) {
         Occurrence occurrence = new Occurrence();
         if (termList.size() == 1) {    // 一个的也计算统计量
@@ -129,7 +127,7 @@ public class Segment {
             return termList.get(0);
         }
         //  debug_Info.append("\n打印分组后的termList->   " + termList + "\n");
-        System.out.println("\n打印分组后的termList->   " + termList + "\n");
+       // System.out.println("\n打印分组后的termList->   " + termList + "\n");
         // 计算候选词的 互信息 和 信息熵
 
         for (String seg : termList) {
@@ -140,8 +138,8 @@ public class Segment {
         // 对候选集根据 归一化得分 降序排列
         termList.sort((o1, o2) -> Double.compare(segTermMap.get(o2).score, segTermMap.get(o1).score));
         // debug_Info.append("   第一轮筛选结果->   " + termList.get(0) + "\n");
-        System.out.println("   第一轮排序结果->   " + termList + "\n");
-        System.out.println("   第一轮筛选结果->   " + termList.get(0) + "\n");
+        //System.out.println("   第一轮排序结果->   " + termList + "\n");
+       // System.out.println("   第一轮筛选结果->   " + termList.get(0) + "\n");
         return termList.get(0);
     }
 

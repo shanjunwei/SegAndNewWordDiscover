@@ -51,9 +51,8 @@ public class PreProcess {
                     break;
                 }
                 String strChar = text.substring(p, p + q);
-                System.out.print(strChar + "=");
                 if (stopWordSet.contains(strChar)) {
-                    System.out.println("  |==>" + strChar);
+                   // System.out.println("  |==>" + strChar);
                     text = text.replaceAll(strChar, ",");
                     p++;
                     continue;  // Í£ÓÃ´ÊÂÔ¹ı

@@ -54,9 +54,6 @@ public class FileUtils {
             OutputStreamWriter bw = new OutputStreamWriter(writer, "UTF-8");          // 以utf-8写结果
             stringSet.forEach(it -> {
                 if (StringUtils.isNotBlank(it)) {
-                    if (it.contains(",")) {
-                        System.out.println("=====>" + it);
-                    }
                     String result = it + " ";
                     try {
                         //   System.out.println(result);
