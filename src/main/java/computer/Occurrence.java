@@ -75,11 +75,11 @@ public class Occurrence {
             segTermMap.put(seg, term);
 
             count++;
-            if (count % 1000 == 0) {
+            if (count % 10000 == 0) {
                 System.out.print("=====");
             }
 
-            if (count == 10000) {
+            if (count == 100000*5) {
                 System.out.println();
                 count = 0;
                 continue;

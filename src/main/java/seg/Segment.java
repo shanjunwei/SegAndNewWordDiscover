@@ -54,6 +54,8 @@ public class Segment {
         for (String seg : result) {
             text = text.replaceAll(seg, " " + seg + " ");
         }
+        text = text.trim();   // 去首尾空格
+        text =text.replaceAll("\\s{1,}", " ");  // 去连续空格
         return text;
     }
 
