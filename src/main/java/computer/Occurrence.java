@@ -2,9 +2,11 @@ package computer;
 
 import org.apache.commons.lang.StringUtils;
 import pojo.Term;
+import serilize.JsonSerilizable;
 import util.FileUtils;
 import util.HanUtils;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -94,6 +96,11 @@ public class Occurrence {
         FileUtils.writeFileToPath("D:\\HanLP\\最新效果\\LE_list",LElist);
         FileUtils.writeFileToPath("D:\\HanLP\\最新效果\\MI_list",MI_list);*/
         System.out.println("统计量计算总耗时: " + (System.currentTimeMillis() - t1) + "ms");
+
+        HashMap<String,Object>  map  =  new HashMap<>();
+
+       // JsonSerilizable.
+
        // System.exit(0);
     }
 
@@ -111,7 +118,7 @@ public class Occurrence {
      */
     public double computeLeftEntropy(String prefix) {
         Set<Map.Entry<String, Integer>> entrySet = trieLeft.prefixSearch(HanUtils.reverseString(prefix));
-        return computeEntropy(entrySet);
+        return computeEntropy(entrySet,prefix);
     }
 
     /**
@@ -119,20 +126,26 @@ public class Occurrence {
      */
     public double computeRightEntropy(String prefix) {
         Set<Map.Entry<String, Integer>> entrySet = trieRight.prefixSearch(prefix);
-        return computeEntropy(entrySet);
+        return computeEntropy(entrySet,prefix);
     }
 
 
     /**
      * 信息熵计算
      */
-    private double computeEntropy(Set<Map.Entry<String, Integer>> entrySet) {
+    private double computeEntropy(Set<Map.Entry<String, Integer>> entrySet,String prefix) {
         double totalFrequency = 0;
         for (Map.Entry<String, Integer> entry : entrySet) {
+            if(entry.getKey().length() != prefix.length()+1){
+                continue;
+            }
             totalFrequency += entry.getValue();
         }
         double le = 0;
         for (Map.Entry<String, Integer> entry : entrySet) {
+            if(entry.getKey().length() != prefix.length()+1){
+                continue;
+            }
             double p = entry.getValue() / totalFrequency;
             le += -p * Math.log(p);
         }
@@ -161,8 +174,8 @@ public class Occurrence {
         double p_x = Math.max(MIN_PROBABILITY, x_count / totalCount);
         int y_count = y.length() == 1 ? singWordCountMap.get(y) : wcMap.get(y);
         double p_y = Math.max(MIN_PROBABILITY, y_count / totalCount);
-       // return  (Math.log(p_xy / (p_x * p_y)) / Math.log(2)) * 1e6;
-        return p_xy * (Math.log(p_xy / (p_x * p_y)) / Math.log(2)) * 1e6;
+        //return  (Math.log(p_xy / (p_x * p_y)) / Math.log(2)) * 10;
+        return p_xy * (Math.log(p_xy / (p_x * p_y)) / Math.log(2)) * 1e5;
     }
 
     /**
@@ -170,10 +183,7 @@ public class Occurrence {
      */
     public double getNormalizedScore(String seg) {
         Term term = segTermMap.get(seg);
-
-
         term.score = term.mi / totalMI + term.le / totalLE + term.re / totalRE;   // 归一化
-
       //  debug_Info.append(seg + "   mi->   " + term.mi + " le->" + term.le + " re->" + term.re + " wc->" + term.count + " score->" + term.score + "\n");
         System.out.println(seg + "   mi->   " + term.mi + " le->" + term.le + " re->" + term.re + " wc->" + term.count + " score->" + term.score + "\n");
         //  term.score *= totalTerm;  // 这个先不加看看结果
