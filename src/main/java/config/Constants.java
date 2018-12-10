@@ -4,7 +4,9 @@ import pojo.Term;
 import trie.bintrie.BinTrie;
 import util.FileUtils;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -19,6 +21,11 @@ public class Constants {
     public static Map<String, Integer> singWordCountMap = new ConcurrentHashMap<>();   // 单字词频
 
     public static Map<String, Term> segTermMap = new ConcurrentHashMap<>();   //用于统计量归一化计算
+
+    public static final List<Double> LElist = new ArrayList<>();   //左熵
+    public static final List<Double> RElist = new ArrayList<>();   //右熵
+    public static final List<Double> MI_list = new ArrayList<>();   //互信息
+
     /**
      * 字典树,用于左前缀查询
      */

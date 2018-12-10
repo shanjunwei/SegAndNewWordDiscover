@@ -27,10 +27,11 @@ public class Segment {
     public static void main(String[] args) {
         //  将信息熵 互信息等统计量加入到过滤决策机制中
         Segment segment = new Segment();
-        List<String> result = segment.segment("陪同考察企业并看望慰问职工的国务院有关部门和北京市负责人还有");
-        System.out.println(result);
-        List<String> result2 = segment.segment("据新华社北京12月30日电西藏自治区政府副主席泽仁桑珠今天在北京接受记者采访时介绍说");
-        System.out.println(result2);
+        List<String> result = segment.segment("表示期待政府能在新的一年里采取有力措施");
+        System.out.println("\n*************************分词结果集"+result+"*************************\n");
+        List<String> result2 = segment.segment("带着对周恩来刻骨铭心的眷恋离开了人世");
+        System.out.println("\n*************************分词结果集"+result2+"*************************\n");
+       // System.out.println(result2);
     }
 
     /**
@@ -47,6 +48,7 @@ public class Segment {
      * 传进来的参数 没有非中文字符，一个句子
      */
     public String segmentToString(String text) {
+        System.out.println("元句子————>  "+text);
         List<String> termList = HanUtils.getFMMList(text, false);    // 置信度比较的是这里面的值
         // 词提取
         LinkedHashSet<String> result = extractWordsFromNGram(text.length(), termList);
@@ -67,12 +69,6 @@ public class Segment {
      */
     public LinkedHashSet<String> extractWordsFromNGram(int s_len, List<String> termList) {
         // 将切分结果集分为以首字符区分的若干组
-        HashSet<String> firstCharacters = new HashSet<>();   // 首字符 集合
-        for (String word : termList) {
-            if (!firstCharacters.contains(word.substring(0, 1))) {
-                firstCharacters.add(word.substring(0, 1));
-            }
-        }
         List<List<String>> teams = new ArrayList<>();  //  分组集合
         List<String> seg_list = new ArrayList<>(termList);
         int p = 0;
@@ -103,10 +99,11 @@ public class Segment {
         });
 
         // 排序
+        System.out.println("第二轮筛选前: "+result_list);
         result_list.sort((o1, o2) -> Double.compare(segTermMap.get(o2).score, segTermMap.get(o1).score));
-
+        System.out.println("第二轮排序后: "+result_list);
         LinkedHashSet final_result = new LinkedHashSet();
-        int n = (int) Math.round(Math.sqrt(s_len));
+        //int n = (int) Math.round(Math.sqrt(s_len));
         for (int i = 0; i < result_list.size(); i++) {
             if (final_result.isEmpty()) {
                 final_result.add(result_list.get(0));
@@ -129,7 +126,7 @@ public class Segment {
             return termList.get(0);
         }
         //  debug_Info.append("\n打印分组后的termList->   " + termList + "\n");
-       // System.out.println("\n打印分组后的termList->   " + termList + "\n");
+        System.out.println("\n打印分组后的termList->   " + termList + "\n");
         // 计算候选词的 互信息 和 信息熵
 
         for (String seg : termList) {
@@ -140,8 +137,8 @@ public class Segment {
         // 对候选集根据 归一化得分 降序排列
         termList.sort((o1, o2) -> Double.compare(segTermMap.get(o2).score, segTermMap.get(o1).score));
         // debug_Info.append("   第一轮筛选结果->   " + termList.get(0) + "\n");
-        //System.out.println("   第一轮排序结果->   " + termList + "\n");
-       // System.out.println("   第一轮筛选结果->   " + termList.get(0) + "\n");
+        System.out.println("   第一轮排序结果->   " + termList + "\n");
+        System.out.println("   第一轮筛选结果->   " + termList.get(0) + "\n");
         return termList.get(0);
     }
 

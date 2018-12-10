@@ -15,5 +15,6 @@
     <orderEntry type="library" name="Maven: com.belerweb:pinyin4j:2.5.0" level="project" />
     <orderEntry type="library" name="Maven: com.sun:rt:1.5.0_06" level="project" />
     <orderEntry type="library" name="Maven: com.hankcs:aho-corasick-double-array-trie:1.2.0" level="project" />
+    <orderEntry type="library" name="Maven: com.alibaba:fastjson:1.1.25" level="project" />
   </component>
 </module>

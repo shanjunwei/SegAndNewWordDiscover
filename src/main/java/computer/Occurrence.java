@@ -2,6 +2,7 @@ package computer;
 
 import org.apache.commons.lang.StringUtils;
 import pojo.Term;
+import util.FileUtils;
 import util.HanUtils;
 
 import java.util.List;
@@ -63,30 +64,37 @@ public class Occurrence {
         for (String seg : wcMap.keySet()) {
             // 1. 计算信息熵
             double rightEntropy = computeRightEntropy(seg);
+            RElist.add(rightEntropy);
             totalRE = totalRE + rightEntropy;
             //  debug_Info.append(seg + "   :右邻信息熵->  " + rightEntropy + "\n");
             double leftEntropy = computeLeftEntropy(seg);
+            LElist.add(leftEntropy);
             totalLE = totalLE + leftEntropy;
             // debug_Info.append(seg + "   :左邻信息熵->  " + leftEntropy + "\n"); // double entropy  =  Math.min(rightEntropy,leftEntropy);
             // 2. 计算互信息
             double mi = computeMutualInformation(seg);
+            MI_list.add(mi);
             totalMI = totalMI + mi;
             Term term = new Term(seg, wcMap.get(seg), mi, leftEntropy, rightEntropy);
             segTermMap.put(seg, term);
 
             count++;
-            if (count % 10000 == 0) {
-                System.out.print("=====");
+            if (count % 100000 == 0) {
+                System.out.print("*");
             }
 
-            if (count == 100000*5) {
+            if (count == 100000*100) {
                 System.out.println();
                 count = 0;
                 continue;
             }
         }
-
+        //  将三份统计量分别存于文件中便于分析
+/*        FileUtils.writeFileToPath("D:\\HanLP\\最新效果\\RE_list",RElist);
+        FileUtils.writeFileToPath("D:\\HanLP\\最新效果\\LE_list",LElist);
+        FileUtils.writeFileToPath("D:\\HanLP\\最新效果\\MI_list",MI_list);*/
         System.out.println("统计量计算总耗时: " + (System.currentTimeMillis() - t1) + "ms");
+       // System.exit(0);
     }
 
     /**
@@ -153,6 +161,7 @@ public class Occurrence {
         double p_x = Math.max(MIN_PROBABILITY, x_count / totalCount);
         int y_count = y.length() == 1 ? singWordCountMap.get(y) : wcMap.get(y);
         double p_y = Math.max(MIN_PROBABILITY, y_count / totalCount);
+       // return  (Math.log(p_xy / (p_x * p_y)) / Math.log(2)) * 1e6;
         return p_xy * (Math.log(p_xy / (p_x * p_y)) / Math.log(2)) * 1e6;
     }
 
@@ -166,7 +175,7 @@ public class Occurrence {
         term.score = term.mi / totalMI + term.le / totalLE + term.re / totalRE;   // 归一化
 
       //  debug_Info.append(seg + "   mi->   " + term.mi + " le->" + term.le + " re->" + term.re + " wc->" + term.count + " score->" + term.score + "\n");
-     //   System.out.println(seg + "   mi->   " + term.mi + " le->" + term.le + " re->" + term.re + " wc->" + term.count + " score->" + term.score + "\n");
+        System.out.println(seg + "   mi->   " + term.mi + " le->" + term.le + " re->" + term.re + " wc->" + term.count + " score->" + term.score + "\n");
         //  term.score *= totalTerm;  // 这个先不加看看结果
         return term.score;
     }

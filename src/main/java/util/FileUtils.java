@@ -72,6 +72,27 @@ public class FileUtils {
     }
 
 
+    public static void writeFileToPath(String outPutPath, List<Double> stringSet) {
+        try {
+            FileOutputStream writer = new FileOutputStream(outPutPath);
+            OutputStreamWriter bw = new OutputStreamWriter(writer, "UTF-8"); // 以utf-8写结果
+            stringSet.forEach(it -> {
+                String result = it + "\n";
+                try {
+                    bw.write(result);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
+
+            bw.close();
+            writer.close();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+
     public static void writeFileToPath(String outPutPath, List<String> list, Map<String, Integer> wcMap) {
         try {
             FileOutputStream writer = new FileOutputStream(outPutPath);
