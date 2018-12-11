@@ -4,23 +4,21 @@ import pojo.Term;
 import trie.bintrie.BinTrie;
 import util.FileUtils;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
  *  常量
  */
 public class Constants {
+    public static boolean NovelTest = false;   // 是测试小说还是人民日报语料,默认的是人名日报
     public static  String NOVEL;
     public static HashSet stopWordSet = new HashSet();     // 停用词哈希表
     public static Map<String, Integer> wcMap = new ConcurrentHashMap<>();   // 用于存储切分结果和统计词频
 
     public static Map<String, Integer> singWordCountMap = new ConcurrentHashMap<>();   // 单字词频
 
-    public static Map<String, Term> segTermMap = new ConcurrentHashMap<>();   //用于统计量归一化计算
+    public static Map<String, Term> segTermMap = new HashMap<>();   //用于统计量归一化计算
 
     public static final List<Double> LElist = new ArrayList<>();   //左熵
     public static final List<Double> RElist = new ArrayList<>();   //右熵

@@ -3,9 +3,11 @@ package seg;
 
 import config.Config;
 import org.apache.commons.lang.StringUtils;
+import util.FileUtils;
 import util.HanUtils;
 
 import java.io.*;
+import java.util.LinkedHashSet;
 
 import static config.Config.MAX_STOP_WORD_LEN;
 import static config.Constants.stopWordSet;
@@ -14,8 +16,6 @@ import static config.Constants.stopWordSet;
  * 数据预处理
  */
 public class PreProcess {
-    public static String novel_text;
-
     public void initData() {   // 数据预处理,针对人民日报语料做一些修改
         try {
             // 以utf-8读取文件
@@ -24,7 +24,7 @@ public class PreProcess {
             BufferedReader br = new BufferedReader(reader);
             String str = null;
             while ((str = br.readLine()) != null) {
-                if(StringUtils.isNotBlank(str)){
+                if (StringUtils.isNotBlank(str)) {
                     HanUtils.FMMSegment(str, true);   // FMM算法切分候选词并统计词频
                 }
             }
@@ -36,6 +36,22 @@ public class PreProcess {
             e.printStackTrace();
         }
     }
+
+
+    public void initNovel() {   // 数据预处理,针对人民日报语料做一些修改
+        // 读取小说文本
+        String novel = FileUtils.readFileToString(Config.NovelPath);
+        String[] replaceNonChinese = HanUtils.replaceNonChineseCharacterAsBlank(novel);  // 去掉非中文字符   里边没有逗号
+        // 再拆分停用词
+        for (int i = 0; i < replaceNonChinese.length; i++) {
+            String textDS = replaceNonChinese[i];   // 这里没有逗号
+            if (StringUtils.isNotBlank(textDS) && textDS.length() != 1) {
+                HanUtils.FMMSegment(textDS, true);    // 置信度比较的是这里面的值
+            }
+        }
+    }
+
+
     // 去掉停用词，去掉停用词从低到高
     private String[] segmentByStopWordsAes(String text) {
         if (text.length() == 1) {
@@ -52,7 +68,7 @@ public class PreProcess {
                 }
                 String strChar = text.substring(p, p + q);
                 if (stopWordSet.contains(strChar)) {
-                   // System.out.println("  |==>" + strChar);
+                    // System.out.println("  |==>" + strChar);
                     text = text.replaceAll(strChar, ",");
                     p++;
                     continue;  // 停用词略过

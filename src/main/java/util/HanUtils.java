@@ -16,6 +16,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static config.Config.MAX_WORD_LEN;
+import static config.Config.entropy_theta;
 import static config.Constants.singWordCountMap;
 import static config.Constants.wcMap;
 
@@ -64,6 +65,21 @@ public class HanUtils {
             }
         }
         return pinyinName.toString();
+    }
+
+
+    /**
+     * ÐÅÏ¢ìØ¹ýÂË
+     */
+    public static boolean EntropyFilter(double leftEntropy, double rightEntropy) {
+        if (leftEntropy == 0 || rightEntropy == 0) {
+            return true;
+        }
+        double min = Math.min(leftEntropy, rightEntropy);
+        double max = Math.max(leftEntropy, rightEntropy);
+        if (min / max < entropy_theta) return true;
+
+        return false;
     }
 
 

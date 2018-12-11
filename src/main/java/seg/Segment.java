@@ -4,10 +4,12 @@ import computer.Occurrence;
 import pojo.Term;
 import util.HanUtils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
+import java.util.List;
 
-import static config.Constants.segTermMap;
-import static config.Constants.wcMap;
+import static config.Constants.*;
 
 /**
  * 基于互信息 和信息熵的分词与新词发现
@@ -17,21 +19,31 @@ public class Segment {
     //public static StringBuilder debug_Info = new StringBuilder();   // debug 信息，用于存于文件中
     // 数据预处理先做
     static {
-        PreProcess preProcess = new PreProcess();
-        preProcess.initData();
-        // 将所有切分片段 加载进 字典树，方便进行信息熵的计算
         Occurrence occurrence = new Occurrence();
-        occurrence.addAllSegAndCompute(wcMap);
+        occurrence.deserilizableStatistics();    // 反序列化
+    }
+
+    public void serilizableStatisticsToFile() {       // 序列化只要算一次
+        PreProcess preProcess = new PreProcess();
+        if (NovelTest) {
+            preProcess.initNovel();
+        } else {
+            preProcess.initData();
+        }
+        Occurrence occurrence = new Occurrence();
+        occurrence.addAllSegAndCompute(wcMap);   // 计算统计量
+        occurrence.serilizableStatisticsToFile();   //  序列化计算结果到文件
     }
 
     public static void main(String[] args) {
         //  将信息熵 互信息等统计量加入到过滤决策机制中
         Segment segment = new Segment();
-        List<String> result = segment.segment("表示期待政府能在新的一年里采取有力措施");
-        System.out.println("\n*************************分词结果集"+result+"*************************\n");
-        List<String> result2 = segment.segment("带着对周恩来刻骨铭心的眷恋离开了人世");
-        System.out.println("\n*************************分词结果集"+result2+"*************************\n");
-       // System.out.println(result2);
+     /*   NovelTest = true;
+        List<String> result = segment.segment("也无论如何不可能给学生们盖一座餐厅");
+        System.out.println("\n*************************分词结果集" + result + "*************************\n");
+        List<String> result2 = segment.segment("那他们也就别想安宁地过日子了");
+        System.out.println("\n*************************分词结果集" + result2 + "*************************\n");*/
+        segment.serilizableStatisticsToFile();
     }
 
     /**
@@ -48,7 +60,7 @@ public class Segment {
      * 传进来的参数 没有非中文字符，一个句子
      */
     public String segmentToString(String text) {
-        System.out.println("元句子————>  "+text);
+        //System.out.println("元句子————>  " + text);
         List<String> termList = HanUtils.getFMMList(text, false);    // 置信度比较的是这里面的值
         // 词提取
         LinkedHashSet<String> result = extractWordsFromNGram(text.length(), termList);
@@ -57,7 +69,7 @@ public class Segment {
             text = text.replaceAll(seg, " " + seg + " ");
         }
         text = text.trim();   // 去首尾空格
-        text =text.replaceAll("\\s{1,}", " ");  // 去连续空格
+        text = text.replaceAll("\\s{1,}", " ");  // 去连续空格
         return text;
     }
 
@@ -65,7 +77,7 @@ public class Segment {
     /**
      * @param s_len    原字符串长度  s指挥警察四处奔忙  取候选集前根号len(s)个  ,s为待FMM 切分串
      * @param termList 候选集  指挥->117 指挥警->2 指挥警察->2 挥警->2 挥警察->2 挥警察四->2 警察->51 警察四->2 警察四处->2 察四->2 察四处->2 察四处奔->2 四处->35 四处奔->6 四处奔忙->2 处奔->10 处奔忙->2 奔忙->4
-     * @return 置信度过滤，过滤的结果无交集
+     * @return 置信度过滤， 过滤的结果无交集
      */
     public LinkedHashSet<String> extractWordsFromNGram(int s_len, List<String> termList) {
         // 将切分结果集分为以首字符区分的若干组
@@ -99,9 +111,9 @@ public class Segment {
         });
 
         // 排序
-        System.out.println("第二轮筛选前: "+result_list);
+        // System.out.println("第二轮筛选前: " + result_list);
         result_list.sort((o1, o2) -> Double.compare(segTermMap.get(o2).score, segTermMap.get(o1).score));
-        System.out.println("第二轮排序后: "+result_list);
+        //System.out.println("第二轮排序后: " + result_list);
         LinkedHashSet final_result = new LinkedHashSet();
         //int n = (int) Math.round(Math.sqrt(s_len));
         for (int i = 0; i < result_list.size(); i++) {
@@ -126,19 +138,34 @@ public class Segment {
             return termList.get(0);
         }
         //  debug_Info.append("\n打印分组后的termList->   " + termList + "\n");
-        System.out.println("\n打印分组后的termList->   " + termList + "\n");
+        // System.out.println("\n打印分组后的termList->   " + termList + "\n");
         // 计算候选词的 互信息 和 信息熵
-
         for (String seg : termList) {
+            // Term term = JSON.parseObject(String.valueOf(segTermMap.get(seg)), new TypeReference<Term>() {});
             Term term = segTermMap.get(seg);
-            double score = occurrence.getNormalizedScore(seg);
-            term.setScore(score);   // 赋值
+            if (term == null) {
+                System.out.println("======");
+            }
+            if (term != null) {
+                //Term term = segTermMap.get(seg);
+                if (HanUtils.EntropyFilter(term.le, term.re)) { // 过滤掉信息熵过滤明显不是词的
+                    term.setScore(0);
+                } else {
+                    double score = occurrence.getNormalizedScore(seg);
+                    term.setScore(score);   // 赋值
+                }
+            }
         }
         // 对候选集根据 归一化得分 降序排列
         termList.sort((o1, o2) -> Double.compare(segTermMap.get(o2).score, segTermMap.get(o1).score));
+       /* termList.sort((o1, o2) -> {
+            Term term1 = JSON.parseObject(String.valueOf(segTermMap.get(o1)), new TypeReference<Term>() {});
+            Term term2 = JSON.parseObject(String.valueOf(segTermMap.get(02)), new TypeReference<Term>() {});
+            return Double.compare(term2.score, term1.score);
+        });*/
         // debug_Info.append("   第一轮筛选结果->   " + termList.get(0) + "\n");
-        System.out.println("   第一轮排序结果->   " + termList + "\n");
-        System.out.println("   第一轮筛选结果->   " + termList.get(0) + "\n");
+        // System.out.println("   第一轮排序结果->   " + termList + "\n");
+        // System.out.println("   第一轮筛选结果->   " + termList.get(0) + "\n");
         return termList.get(0);
     }
 

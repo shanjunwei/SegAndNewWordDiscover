@@ -1,10 +1,11 @@
 package pojo;
 
+import java.io.Serializable;
+
 /**
  *   存储每个切分 和他们的一些统计信息
  */
-public class Term {
-
+public class Term implements Serializable {
     public   String  seg;   // 切分片段
     public   int  count;   // 频次
     /**

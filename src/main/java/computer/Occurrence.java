@@ -1,12 +1,12 @@
 package computer;
 
-import org.apache.commons.lang.StringUtils;
+import config.Config;
 import pojo.Term;
 import serilize.JsonSerilizable;
 import util.FileUtils;
 import util.HanUtils;
 
-import java.util.HashMap;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -64,6 +64,7 @@ public class Occurrence {
             totalCount = totalCount + wcMap.get(seg);    // 计算总词频
         }
         for (String seg : wcMap.keySet()) {
+            //System.out.println("====计算信息熵-->"+seg);
             // 1. 计算信息熵
             double rightEntropy = computeRightEntropy(seg);
             RElist.add(rightEntropy);
@@ -85,31 +86,48 @@ public class Occurrence {
                 System.out.print("*");
             }
 
-            if (count == 100000*100) {
+            if (count == 100000 * 100) {
                 System.out.println();
                 count = 0;
                 continue;
             }
         }
-        //  将三份统计量分别存于文件中便于分析
-/*        FileUtils.writeFileToPath("D:\\HanLP\\最新效果\\RE_list",RElist);
-        FileUtils.writeFileToPath("D:\\HanLP\\最新效果\\LE_list",LElist);
-        FileUtils.writeFileToPath("D:\\HanLP\\最新效果\\MI_list",MI_list);*/
         System.out.println("统计量计算总耗时: " + (System.currentTimeMillis() - t1) + "ms");
+    }
 
-        HashMap<String,Object>  map  =  new HashMap<>();
 
-       // JsonSerilizable.
+    public void serilizableStatisticsToFile() {
+        //  将三份统计量分别存于文件中便于分析
+      /*  FileUtils.writeFileToPath(Config.segTermMapPath, RElist);
+        FileUtils.writeFileToPath(Config.segTermMapPath, LElist);
+        FileUtils.writeFileToPath("D:\\HanLP\\最新效果\\MI_list", MI_list);*/
+        // 保存总量统计信息
+        Term term = new Term("####", 0, totalMI, totalLE, totalRE);
+        segTermMap.put("####", term);
+        try {
+            JsonSerilizable.serilizableForMap(segTermMap, Config.segTermMapPath);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        System.exit(0);
+    }
 
-       // System.exit(0);
+    public static void main(String[] args) {
+        Occurrence occurrence = new Occurrence();
+        occurrence.deserilizableStatistics();
     }
 
     /**
-     * 添加切分词
+     * 反序列化统计量到内存
      */
-    public void addSeg(String seg, Integer count) {
-        if (StringUtils.isNotBlank(seg)) {
-            trieLeft.put(seg, count);
+    public void deserilizableStatistics() {
+        try {
+            segTermMap = JsonSerilizable.deserilizableForMapFromFile("D:\\HanLP\\序列化\\segTermMap.txt");
+            totalRE = segTermMap.get("####").getRe();
+            totalLE = segTermMap.get("####").getLe();
+            totalMI = segTermMap.get("####").getMi();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -118,7 +136,7 @@ public class Occurrence {
      */
     public double computeLeftEntropy(String prefix) {
         Set<Map.Entry<String, Integer>> entrySet = trieLeft.prefixSearch(HanUtils.reverseString(prefix));
-        return computeEntropy(entrySet,prefix);
+        return computeEntropy(entrySet, prefix);
     }
 
     /**
@@ -126,24 +144,24 @@ public class Occurrence {
      */
     public double computeRightEntropy(String prefix) {
         Set<Map.Entry<String, Integer>> entrySet = trieRight.prefixSearch(prefix);
-        return computeEntropy(entrySet,prefix);
+        return computeEntropy(entrySet, prefix);
     }
 
 
     /**
      * 信息熵计算
      */
-    private double computeEntropy(Set<Map.Entry<String, Integer>> entrySet,String prefix) {
+    private double computeEntropy(Set<Map.Entry<String, Integer>> entrySet, String prefix) {
         double totalFrequency = 0;
         for (Map.Entry<String, Integer> entry : entrySet) {
-            if(entry.getKey().length() != prefix.length()+1){
+            if (entry.getKey().length() != prefix.length() + 1) {
                 continue;
             }
             totalFrequency += entry.getValue();
         }
         double le = 0;
         for (Map.Entry<String, Integer> entry : entrySet) {
-            if(entry.getKey().length() != prefix.length()+1){
+            if (entry.getKey().length() != prefix.length() + 1) {
                 continue;
             }
             double p = entry.getValue() / totalFrequency;
@@ -182,10 +200,11 @@ public class Occurrence {
      * 得到归一化值
      */
     public double getNormalizedScore(String seg) {
+        //Term term = JSON.parseObject(String.valueOf(segTermMap.get(seg)),new TypeReference<Term>() {});
         Term term = segTermMap.get(seg);
         term.score = term.mi / totalMI + term.le / totalLE + term.re / totalRE;   // 归一化
-      //  debug_Info.append(seg + "   mi->   " + term.mi + " le->" + term.le + " re->" + term.re + " wc->" + term.count + " score->" + term.score + "\n");
-        System.out.println(seg + "   mi->   " + term.mi + " le->" + term.le + " re->" + term.re + " wc->" + term.count + " score->" + term.score + "\n");
+        //  debug_Info.append(seg + "   mi->   " + term.mi + " le->" + term.le + " re->" + term.re + " wc->" + term.count + " score->" + term.score + "\n");
+        // System.out.println(seg + "   mi->   " + term.mi + " le->" + term.le + " re->" + term.re + " wc->" + term.count + " score->" + term.score + "\n");
         //  term.score *= totalTerm;  // 这个先不加看看结果
         return term.score;
     }
