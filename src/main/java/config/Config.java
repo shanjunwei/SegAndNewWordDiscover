@@ -19,6 +19,18 @@ public class Config {
     public static String DebugPath = "F:\\JAVATools\\HanLP\\人名日报\\666.txt";   //  debug 信息输出
     public static final String segTermMapPath = "data\\segTermMap.txt";   //序列化文件输出路径
 
+    /**
+     * 切分段去重后 总互信息
+     */
+    public static double totalMI;
+    /**
+     * 切分段去重后  总左熵
+     */
+    public static double totalLE;
+    /**
+     * 切分段去重后  总右熵
+     */
+    public static double totalRE;
     static {
         if(NovelTest == true){
             NovelPath = "D:\\HanLP\\novel\\平凡的世界.txt"; // 语料入口

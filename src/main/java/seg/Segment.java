@@ -5,6 +5,7 @@ import config.Config;
 import config.Constants;
 import org.apache.commons.lang.StringUtils;
 import pojo.Term;
+import serilize.JsonSerializationUtil;
 import util.FileUtils;
 import util.HanUtils;
 
@@ -21,43 +22,16 @@ public class Segment {
     //public static StringBuilder debug_Info = new StringBuilder();   // debug 信息，用于存于文件中
     // 数据预处理先做
     static {
-        Occurrence occurrence = new Occurrence();
-        occurrence.deserilizableStatistics();    // 反序列化
+        //JsonSerializationUtil.serilizableStatisticsToFile();    // 序列化计算结果
+        JsonSerializationUtil.deserilizableStatistics();    // 反序列化
     }
-
-    public void serilizableStatisticsToFile() {       // 序列化只要算一次
-        PreProcess preProcess = new PreProcess();
-        if (NovelTest) {
-            preProcess.initNovel();
-        } else {
-            preProcess.initData();
-        }
-        Occurrence occurrence = new Occurrence();
-        occurrence.addAllSegAndCompute(wcMap);   // 计算统计量
-        occurrence.serilizableStatisticsToFile();   //  序列化计算结果到文件
-    }
-
     public static void main(String[] args) {
         //  将信息熵 互信息等统计量加入到过滤决策机制中
         Segment segment = new Segment();
         NovelTest = true;
-        //DEBUG_MODE = true;
+        DEBUG_MODE = true;
         List<String> result = segment.segment("他无法忍受陌生人用异样的目光看他和身边两个漂亮的妹妹");
         System.out.println("\n*************************分词结果集" + result + "*************************\n");
-        // segment.serilizableStatisticsToFile();
-        // 读取小说文本
-        /*String novel = FileUtils.readFileToString(Config.NovelPath);
-        String[] replaceNonChinese = HanUtils.replaceNonChineseCharacterAsBlank(novel);  // 去掉非中文字符   里边没有逗号
-        // 再拆分停用词
-        for (int i = 0; i < replaceNonChinese.length; i++) {
-            String textDS = replaceNonChinese[i];   // 这里没有逗号
-            if (StringUtils.isNotBlank(textDS) && textDS.length() != 1) {
-                System.out.println("原文本---> "+textDS);
-                System.out.println("切分后---> "+segment.segment(textDS));
-            }
-        }*/
-
-        //  System.out.println(segment.segment("平凡|的世界"));
     }
 
     /**
@@ -70,7 +44,6 @@ public class Segment {
         System.out.println("分词耗时: " + (System.currentTimeMillis() - t1) + "  ms");
         return Arrays.asList(segResult.split(" "));
     }
-
     /**
      * 暴露给外部调用的分词接口    TODO*************************TODO*******
      * 传进来的参数 没有非中文字符，一个句子  TODO*************************TODO*******
@@ -119,10 +92,9 @@ public class Segment {
         if (hasSpecialCharacter) text = HanUtils.getOriginalStr(text);
         return text;
     }
-
-
     /**
      * 原字符串长度  s指挥警察四处奔忙  取候选集前根号len(s)个  ,s为待FMM 切分串
+     *
      * @param termList 候选集  指挥->117 指挥警->2 指挥警察->2 挥警->2 挥警察->2 挥警察四->2 警察->51 警察四->2 警察四处->2 察四->2 察四处->2 察四处奔->2 四处->35 四处奔->6 四处奔忙->2 处奔->10 处奔忙->2 奔忙->4
      * @return 置信度过滤， 过滤的结果无交集
      */
@@ -178,7 +150,7 @@ public class Segment {
 
     //  第一轮筛选
     private String getTopCandidateFromSet(List<String> termList) {
-        if(DEBUG_MODE) System.out.println("   第一轮筛选前->   " + termList + "\n");
+        if (DEBUG_MODE) System.out.println("   第一轮筛选前->   " + termList + "\n");
         List<String> result = new ArrayList<>();
         Occurrence occurrence = new Occurrence();
         if (termList.size() == 1) {    // 一个的也计算统计量
@@ -199,7 +171,7 @@ public class Segment {
             Term term = segTermMap.get(seg);
             if (term != null) {
                 if (HanUtils.EntropyFilter(term.le, term.re)) { // 过滤掉信息熵过滤明显不是词的
-                    if(DEBUG_MODE) System.out.println("信息熵过滤-> "+ seg +" le->" + term.le + " re->" + term.re);
+                    if (DEBUG_MODE) System.out.println("信息熵过滤-> " + seg + " le->" + term.le + " re->" + term.re);
                     term.setScore(0);
                 } else {
                     double score = occurrence.getNormalizedScore(seg);
@@ -210,7 +182,7 @@ public class Segment {
         }
         // 对候选集根据 归一化得分 降序排列
         result.sort((o1, o2) -> Double.compare(segTermMap.get(o2).score, segTermMap.get(o1).score));
-        if(DEBUG_MODE) System.out.println("   第一轮排序后->   " + result + "\n");
+        if (DEBUG_MODE) System.out.println("   第一轮排序后->   " + result + "\n");
         //System.out.println("   第一轮筛选结果->   " + termList.get(0) + "\n");
         return result.size() == 0 ? null : termList.get(0);
     }
@@ -218,47 +190,14 @@ public class Segment {
 }
 
 
-/*// 输出总结果
-    public void doConfidenceCalculation() {
-        // 置信度计算
-        String[] replaceNonChinese = HanUtils.replaceNonChineseCharacterAsBlank(PreProcess.novel_text);  // 去掉非中文字符   里边没有逗号
+// 读取小说文本
+        /*String novel = FileUtils.readFileToString(Config.NovelPath);
+        String[] replaceNonChinese = HanUtils.replaceNonChineseCharacterAsBlank(novel);  // 去掉非中文字符   里边没有逗号
+        // 再拆分停用词
         for (int i = 0; i < replaceNonChinese.length; i++) {
             String textDS = replaceNonChinese[i];   // 这里没有逗号
-            System.out.println("原字符串1=>" + textDS);
-           // debug_Info.append("原字符串1=>" + textDS + "\n");
             if (StringUtils.isNotBlank(textDS) && textDS.length() != 1) {
-                String text = textDS;
-                debug_text_lenth = text.length() > 4 ? true : false;
-                LinkedHashSet<String> termList = HanUtils.segment(text, false);    // 置信度比较的是这里面的值
-      *//*          if (debug_text_lenth) debug_Info.append("切分字串=>");
-                if (debug_text_lenth) debug_Info.append("\n");*//*
-                // 取过滤
-                LinkedHashSet result = extractWordsFromNGram(text.length(), termList);
-                seg_final_result.addAll(result);
-               // if (debug_text_lenth)
-                  //  debug_Info.append("\n ***************************结果集->" + result + "***************************************\n");
-               // if (debug_text_lenth) debug_Info.append("\n");
+                System.out.println("原文本---> "+textDS);
+                System.out.println("切分后---> "+segment.segment(textDS));
             }
-        }
-
-        // 最终结果排序输出
-        List<String> list = new ArrayList<>(seg_final_result);
-        list.sort(Comparator.comparing(HanUtils::firstPinyinCharStr));
-        FileUtils.writeStringToFile(Config.DebugPath, debug_Info.toString());
-        System.out.println();
-    }*/
-
-
- /* public String segmentToString(String text) {
-        //System.out.println("元句子————>  " + text);
-        List<String> termList = HanUtils.getFMMList(text, false);    // 置信度比较的是这里面的值
-        // 词提取
-        LinkedHashSet<String> result = extractWordsFromNGram(text.length(), termList);
-        // 剩下的都是词了
-        for (String seg : result) {
-            text = text.replaceAll(seg, " " + seg + " ");
-        }
-        text = text.trim();   // 去首尾空格
-        text = text.replaceAll("\\s{1,}", " ");  // 去连续空格
-        return text;
-    }*/
+        }*/
