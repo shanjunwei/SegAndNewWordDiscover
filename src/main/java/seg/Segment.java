@@ -26,11 +26,12 @@ public class Segment {
         JsonSerializationUtil.deserilizableStatistics();    // 反序列化
     }
     public static void main(String[] args) {
+        String  test_text = args[0];     // 测试文本通过标准输入传入
         //  将信息熵 互信息等统计量加入到过滤决策机制中
         Segment segment = new Segment();
-        NovelTest = true;
+        //NovelTest = true;
         DEBUG_MODE = true;
-        List<String> result = segment.segment("他无法忍受陌生人用异样的目光看他和身边两个漂亮的妹妹");
+        List<String> result = segment.segment(test_text);
         System.out.println("\n*************************分词结果集" + result + "*************************\n");
     }
 
@@ -171,7 +172,7 @@ public class Segment {
             Term term = segTermMap.get(seg);
             if (term != null) {
                 if (HanUtils.EntropyFilter(term.le, term.re)) { // 过滤掉信息熵过滤明显不是词的
-                    if (DEBUG_MODE) System.out.println("信息熵过滤-> " + seg + " le->" + term.le + " re->" + term.re);
+                    if (DEBUG_MODE) System.out.println("信息熵过滤-> "  + seg + "   mi->   " + term.mi +" le->" + term.le + " re->" + term.re);
                     term.setScore(0);
                 } else {
                     double score = occurrence.getNormalizedScore(seg);
