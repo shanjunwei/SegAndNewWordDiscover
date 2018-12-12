@@ -121,14 +121,17 @@ public class Occurrence {
      * 反序列化统计量到内存
      */
     public void deserilizableStatistics() {
+        long  t1  = System.currentTimeMillis();
         try {
-            segTermMap = JsonSerilizable.deserilizableForMapFromFile("D:\\HanLP\\序列化\\segTermMap.txt");
+            segTermMap = JsonSerilizable.deserilizableForMapFromFile(Config.segTermMapPath);
             totalRE = segTermMap.get("####").getRe();
             totalLE = segTermMap.get("####").getLe();
             totalMI = segTermMap.get("####").getMi();
         } catch (IOException e) {
             e.printStackTrace();
         }
+        long  t2  = System.currentTimeMillis();
+        System.out.println("反序列化文件到内存耗时:  "+(t2-t1) +" ms");
     }
 
     /**
@@ -202,9 +205,14 @@ public class Occurrence {
     public double getNormalizedScore(String seg) {
         //Term term = JSON.parseObject(String.valueOf(segTermMap.get(seg)),new TypeReference<Term>() {});
         Term term = segTermMap.get(seg);
+        if(term == null){
+            System.out.println("计算结果中不包含->  "+seg);
+            return 0;
+        }
         term.score = term.mi / totalMI + term.le / totalLE + term.re / totalRE;   // 归一化
-        //  debug_Info.append(seg + "   mi->   " + term.mi + " le->" + term.le + " re->" + term.re + " wc->" + term.count + " score->" + term.score + "\n");
-        // System.out.println(seg + "   mi->   " + term.mi + " le->" + term.le + " re->" + term.re + " wc->" + term.count + " score->" + term.score + "\n");
+        //更换归一化策略
+        term.score  =  term.mi / totalMI + Math.min(term.le / totalLE,term.re / totalRE);
+        if(DEBUG_MODE) System.out.println(seg + "   mi->   " + term.mi + " le->" + term.le + " re->" + term.re + " wc->" + term.count + " score->" + term.score + "\n");
         //  term.score *= totalTerm;  // 这个先不加看看结果
         return term.score;
     }

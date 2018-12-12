@@ -153,8 +153,8 @@ public class Trie {
         trie.startsWith("lint");
 
         boolean lint = trie.delete("lin");
-        System.out.println("lint = " + lint);
+        //System.out.println("lint = " + lint);
         lint = trie.delete("lint");
-        System.out.println("lint = " + lint);
+       // System.out.println("lint = " + lint);
     }
 }

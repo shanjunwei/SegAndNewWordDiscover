@@ -10,7 +10,7 @@ public class Config {
     public final static double MIN_PROBABILITY = 1e-10;   // 10 的负10 次方
     public static final int MAX_STOP_WORD_LEN = 4;  // 停用词最大长度为4
     public static final int MAX_WORD_LEN = 4 + 1;  // 分词最大长度为5
-    public static final double entropy_theta = 0.78;  // 左右信息熵比值过滤
+    public static final double entropy_theta = 0.4;  // 左右信息熵比值过滤  之前采用0.78 现在试试0.44
     public static final int MAX_WORD_COUNT = 1;  // 分词最小词频
     public static final double beta = 0.51;  // 置信度 β
     public final static double MIN_LEFT_ENTROPY = 0.01;   // 最小左熵,用于左邻熵过滤

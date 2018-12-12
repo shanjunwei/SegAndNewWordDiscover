@@ -1,6 +1,8 @@
 package util;
 
 
+import config.Config;
+import config.Constants;
 import net.sourceforge.pinyin4j.PinyinHelper;
 import net.sourceforge.pinyin4j.format.HanyuPinyinCaseType;
 import net.sourceforge.pinyin4j.format.HanyuPinyinOutputFormat;
@@ -8,10 +10,7 @@ import net.sourceforge.pinyin4j.format.HanyuPinyinToneType;
 import net.sourceforge.pinyin4j.format.exception.BadHanyuPinyinOutputFormatCombination;
 import org.apache.commons.lang.StringUtils;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -35,6 +34,15 @@ public class HanUtils {
         Matcher matcher = pattern.matcher(text);
         return matcher.matches();  // 字符串是否与正则表达式相匹配
     }
+
+    public static boolean isSpecialCharacter(char c) {   // 可以识别繁体字
+        if (c == '+' || c == '*' || c == '|' || c == '\\') {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
 
     /**
      * 判断两个字符串首字符是否相等
@@ -97,6 +105,97 @@ public class HanUtils {
         String temp = stringBuilder.toString().replaceAll("[,]+", ",");  // 对多个非分词字符进行合并处理
         String[] seg_nonChinese_result = temp.split(",");
         return seg_nonChinese_result;
+    }
+
+
+    public static String SpecialCharacterForRegex(String text) {
+        /*char[] chars = text.toCharArray();
+        for (int i = 0; i < chars.length; i++) {
+            if (HanUtils.isSpecialCharacter(chars[i])) {
+                text = text.replaceAll("\\[" + chars[i] + "]", " " + chars[i] + " ");
+            }
+        }*/
+        //String regEx = "[`~!@#$%^&*()+=|{}':;',\\[\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？]";
+        String regEx = "\\\\";
+        Pattern p = Pattern.compile(regEx);
+        Matcher m = p.matcher(text);
+        if (m.find()) {
+            System.out.println(m.group() + "======");
+            text = text.replaceAll(m.group(), " " + m.group() + " ");
+        }
+        return text;
+    }
+
+    public static String getOriginalStr(String str) {
+        if (StringUtils.isBlank(str)) {
+            return str;
+        }
+        if (str.contains("\\\\")) str = str.replace("\\\\", "\\");
+        String regEx = "[\\\\\\*\\+\\|\\{\\}\\(\\)\\^\\$\\[\\]\\?\\,\\.\\&]";
+        Pattern p = Pattern.compile(regEx);
+        Matcher m = p.matcher(str);
+        while (m.find()) {
+            str = str.replace("\\", "");
+        }
+        return str;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(makeQueryStringAllRegExp("&"));
+    }
+
+    /**
+     * 2      * 转义正则特殊字符 （$()*+.[]?\^{}
+     * 3      * \\需要第一个替换，否则replace方法替换时会有逻辑bug
+     * 4
+     */
+    public static Map<String, Object> makeQueryStringAllRegExp(String str) {
+        Map<String, Object> result = new HashMap<>();
+        if (StringUtils.isBlank(str)) {
+            return null;
+        }
+     /*   str = str.replace("\\", " \\\\ ").replace("*", " \\* ")
+                .replace("+", " \\+ ").replace("|", " \\| ")
+                .replace("{", " \\{ ").replace("}", " \\} ")
+                .replace("(", " \\( ").replace(")", " \\) ")
+                .replace("^", " \\^ ").replace("$", " \\$ ")
+                .replace("[", " \\[ ").replace("]", " \\] ")
+                .replace("?", " \\? ").replace(",", " \\, ")
+                .replace(".", " \\. ").replace("&", " \\& ");*/
+        String regEx = "[\\*+|{}()^$\\[\\]?,.&]";
+        Pattern p = Pattern.compile(regEx);
+        Matcher m = p.matcher(str);
+        result.put(Constants.HAS_SPECIAL_CHAR, m.find() ? true : false);
+        while (m.find()) {
+            String find = m.group();
+            str = str.replace(find, "\\" + find);
+        }
+        result.put(Constants.STR_REPLACE_SPECIAL, str);
+        return result;
+    }
+
+
+    public static String[] replaceNonChineseCharacterAddBlank(String text) {
+         /*  Pattern r = Pattern.compile("[\\u4E00-\\u9FFF]+");
+        Matcher m = r.matcher(text);
+        while (m.find()) {
+            text = text.replaceAll(m.group(), " " + m.group() + " ");   // 代码达到过滤非中文字符的作用
+        }*/
+        StringBuilder stringBuilder = new StringBuilder();
+        char[] chars = text.toCharArray();
+        for (int i = 0; i < chars.length; i++) {
+            if (HanUtils.isChineseCharacter(String.valueOf(chars[i]))) {
+                stringBuilder.append(" ");
+            } else if (!isSpecialCharacter(chars[i])) {
+                stringBuilder.append(chars[i]);
+            }/*else {
+                stringBuilder.append(chars[i]);
+            }*/
+        }
+        String temp = stringBuilder.toString().trim();   // 去首尾空格
+        temp = temp.replaceAll("\\s{1,}", " ");  // 去连续空格
+        String[] nonChinese_result = temp.split(" ");
+        return nonChinese_result;
     }
 
     /**
@@ -173,7 +272,10 @@ public class HanUtils {
     // 切分词  FMM 算法
     public static List<String> getFMMList(String text, boolean countWordFrequency) {
         // 额外统计单个字的词频
-        wordCountSingleWord(text);
+        if (countWordFrequency){
+            System.out.println("统计单个字的词频");
+            wordCountSingleWord(text);
+        }
         if (text.length() == 1) {
             return null;
         }
@@ -299,10 +401,5 @@ public class HanUtils {
                 break;
         }
         return result;
-    }
-
-
-    public static void main(String[] args) {
-        System.out.println(reverseString("单俊维"));
     }
 }

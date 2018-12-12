@@ -11,6 +11,11 @@ import java.util.concurrent.ConcurrentHashMap;
  *  常量
  */
 public class Constants {
+    public static boolean DEBUG_MODE = false;   //分词DEBUG 模式
+
+    public static final String  HAS_SPECIAL_CHAR  = "hasSpecial";
+    public static final String  STR_REPLACE_SPECIAL  = "str";
+
     public static boolean NovelTest = false;   // 是测试小说还是人民日报语料,默认的是人名日报
     public static  String NOVEL;
     public static HashSet stopWordSet = new HashSet();     // 停用词哈希表
