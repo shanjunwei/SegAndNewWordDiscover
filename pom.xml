@@ -30,7 +30,7 @@
 
         <dependency>
             <groupId>com.hankcs</groupId>
-            <artifactId>aho-corasick-double-array-trie</artifactId>
+            <artifactId>aho-corasick-float-array-trie</artifactId>
             <version>1.2.0</version>
         </dependency>
 

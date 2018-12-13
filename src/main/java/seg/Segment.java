@@ -25,8 +25,12 @@ public class Segment {
         //JsonSerializationUtil.serilizableStatisticsToFile();    // 序列化计算结果
         JsonSerializationUtil.deserilizableStatistics();    // 反序列化
     }
+
     public static void main(String[] args) {
-        String  test_text = args[0];     // 测试文本通过标准输入传入
+        String test_text = args[0];     // 测试文本通过标准输入传入
+
+        if (StringUtils.isBlank(test_text)) System.exit(0);
+
         //  将信息熵 互信息等统计量加入到过滤决策机制中
         Segment segment = new Segment();
         //NovelTest = true;
@@ -40,11 +44,13 @@ public class Segment {
      * 传进来的参数 没有非中文字符，是一个句子
      */
     public List<String> segment(String text) {
+        if (StringUtils.isBlank(text)) return null;
         long t1 = System.currentTimeMillis();
         String segResult = segmentByNonChineseFilter(text);
         System.out.println("分词耗时: " + (System.currentTimeMillis() - t1) + "  ms");
         return Arrays.asList(segResult.split(" "));
     }
+
     /**
      * 暴露给外部调用的分词接口    TODO*************************TODO*******
      * 传进来的参数 没有非中文字符，一个句子  TODO*************************TODO*******
@@ -60,6 +66,8 @@ public class Segment {
      * 传进来的参数 没有非中文字符，一个句子
      */
     public String segmentByNonChineseFilter(String text) {
+        if (StringUtils.isBlank(text)) return "";
+
         String[] replaceNonChinese = HanUtils.replaceNonChineseCharacterAsBlank(text);
         List<String> exactWords = new ArrayList<>();
         for (int i = 0; i < replaceNonChinese.length; i++) {
@@ -93,6 +101,7 @@ public class Segment {
         if (hasSpecialCharacter) text = HanUtils.getOriginalStr(text);
         return text;
     }
+
     /**
      * 原字符串长度  s指挥警察四处奔忙  取候选集前根号len(s)个  ,s为待FMM 切分串
      *
@@ -157,7 +166,7 @@ public class Segment {
         if (termList.size() == 1) {    // 一个的也计算统计量
             String seg = termList.get(0);
             Term term = segTermMap.get(seg);
-            double score = occurrence.getNormalizedScore(seg);
+            float score = occurrence.getNormalizedScore(seg);
             if (term == null) {
                 Term term1 = new Term();
                 term1.setScore(score);
@@ -171,11 +180,18 @@ public class Segment {
         for (String seg : termList) {
             Term term = segTermMap.get(seg);
             if (term != null) {
-                if (HanUtils.EntropyFilter(term.le, term.re)) { // 过滤掉信息熵过滤明显不是词的
-                    if (DEBUG_MODE) System.out.println("信息熵过滤-> "  + seg + "   mi->   " + term.mi +" le->" + term.le + " re->" + term.re);
+                // 信息熵过滤
+                if (occurrence.EntropyFilter(term.le, term.re)) { // 过滤掉信息熵过滤明显不是词的
+                    if (DEBUG_MODE)
+                        System.out.println("信息熵过滤-> " + seg + "   mi->   " + term.mi + " le->" + term.le + " re->" + term.re);
+                    term.setScore(0);
+                }  // 互信息过滤
+                else if (occurrence.MutualInformationFilter(term.mi)) {
+                    if (DEBUG_MODE)
+                        System.out.println("互信息过滤-> " + seg + "   mi->   " + term.mi + " le->" + term.le + " re->" + term.re);
                     term.setScore(0);
                 } else {
-                    double score = occurrence.getNormalizedScore(seg);
+                    float score = occurrence.getNormalizedScore(seg);
                     term.setScore(score);   // 赋值
                     result.add(seg);
                 }

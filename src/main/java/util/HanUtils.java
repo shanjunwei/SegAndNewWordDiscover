@@ -1,7 +1,6 @@
 package util;
 
 
-import config.Config;
 import config.Constants;
 import net.sourceforge.pinyin4j.PinyinHelper;
 import net.sourceforge.pinyin4j.format.HanyuPinyinCaseType;
@@ -76,19 +75,7 @@ public class HanUtils {
     }
 
 
-    /**
-     * 信息熵过滤
-     */
-    public static boolean EntropyFilter(double leftEntropy, double rightEntropy) {
-        if (leftEntropy == 0 || rightEntropy == 0) {
-            return true;
-        }
-        double min = Math.min(leftEntropy, rightEntropy);
-        double max = Math.max(leftEntropy, rightEntropy);
-        if (min / max < entropy_theta) return true;
 
-        return false;
-    }
 
 
     // 将非中文字符  以及中文停用词  以空格替代
@@ -107,25 +94,6 @@ public class HanUtils {
         return seg_nonChinese_result;
     }
 
-
-    public static String SpecialCharacterForRegex(String text) {
-        /*char[] chars = text.toCharArray();
-        for (int i = 0; i < chars.length; i++) {
-            if (HanUtils.isSpecialCharacter(chars[i])) {
-                text = text.replaceAll("\\[" + chars[i] + "]", " " + chars[i] + " ");
-            }
-        }*/
-        //String regEx = "[`~!@#$%^&*()+=|{}':;',\\[\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？]";
-        String regEx = "\\\\";
-        Pattern p = Pattern.compile(regEx);
-        Matcher m = p.matcher(text);
-        if (m.find()) {
-            System.out.println(m.group() + "======");
-            text = text.replaceAll(m.group(), " " + m.group() + " ");
-        }
-        return text;
-    }
-
     public static String getOriginalStr(String str) {
         if (StringUtils.isBlank(str)) {
             return str;
@@ -139,11 +107,6 @@ public class HanUtils {
         }
         return str;
     }
-
-    public static void main(String[] args) {
-        System.out.println(makeQueryStringAllRegExp("&"));
-    }
-
     /**
      * 2      * 转义正则特殊字符 （$()*+.[]?\^{}
      * 3      * \\需要第一个替换，否则replace方法替换时会有逻辑bug
@@ -154,14 +117,6 @@ public class HanUtils {
         if (StringUtils.isBlank(str)) {
             return null;
         }
-     /*   str = str.replace("\\", " \\\\ ").replace("*", " \\* ")
-                .replace("+", " \\+ ").replace("|", " \\| ")
-                .replace("{", " \\{ ").replace("}", " \\} ")
-                .replace("(", " \\( ").replace(")", " \\) ")
-                .replace("^", " \\^ ").replace("$", " \\$ ")
-                .replace("[", " \\[ ").replace("]", " \\] ")
-                .replace("?", " \\? ").replace(",", " \\, ")
-                .replace(".", " \\. ").replace("&", " \\& ");*/
         String regEx = "[\\*+|{}()^$\\[\\]?,.&]";
         Pattern p = Pattern.compile(regEx);
         Matcher m = p.matcher(str);
@@ -197,6 +152,12 @@ public class HanUtils {
         String[] nonChinese_result = temp.split(" ");
         return nonChinese_result;
     }
+
+
+    public static void main(String[] args) {
+        System.out.println(Arrays.asList(replaceNonChineseCharacterAddBlank("中国人民争取和平与裁军委员会代表团是应老挝和平与团结委员会的邀请于12月25日抵老进行为期5天的友好访问的")));
+    }
+
 
     /**
      * 去掉停用词,将待分词串以停用词分割 从高到低取词

@@ -10,11 +10,12 @@ public class Config {
     public final static double MIN_PROBABILITY = 1e-10;   // 10 的负10 次方
     public static final int MAX_STOP_WORD_LEN = 4;  // 停用词最大长度为4
     public static final int MAX_WORD_LEN = 4 + 1;  // 分词最大长度为5
-    public static final double entropy_theta = 0.4;  // 左右信息熵比值过滤  之前采用0.78 现在试试0.44
+    public static final float entropy_theta = 0.4f;  // 左右信息熵比值过滤  之前采用0.78 现在试试0.44
+    public static final float MI_THRESHOLD_VALUE = 0.89f;  // 互信息过滤阈值,之前用的1
     public static final int MAX_WORD_COUNT = 1;  // 分词最小词频
-    public static final double beta = 0.51;  // 置信度 β
-    public final static double MIN_LEFT_ENTROPY = 0.01;   // 最小左熵,用于左邻熵过滤
-    public final static double MIN_RIGHT_ENTROPY = 0.01;   // 最小右熵,用于右邻熵过滤
+    public static final float beta = 0.51f;  // 置信度 β
+    public final static float MIN_LEFT_ENTROPY = 0.01f;   // 最小左熵,用于左邻熵过滤
+    public final static float MIN_RIGHT_ENTROPY = 0.01f;   // 最小右熵,用于右邻熵过滤
     public static String NovelPath =   "D:\\data\\test-text.txt"; // 语料入口
     public static String DebugPath = "F:\\JAVATools\\HanLP\\人名日报\\666.txt";   //  debug 信息输出
     public static final String segTermMapPath = "data\\segTermMap.txt";   //序列化文件输出路径
@@ -22,15 +23,31 @@ public class Config {
     /**
      * 切分段去重后 总互信息
      */
-    public static double totalMI;
+    public static float totalMI;
     /**
      * 切分段去重后  总左熵
      */
-    public static double totalLE;
+    public static float totalLE;
     /**
      * 切分段去重后  总右熵
      */
-    public static double totalRE;
+    public static float totalRE;
+
+
+    /**
+     * 切分段去重后 最大互信息
+     */
+    public static float maxMI =0f;
+    /**
+     * 切分段去重后  最大左熵
+     */
+    public static float maxLE =0f;
+    /**
+     * 切分段去重后  最大右熵
+     */
+    public static float maxRE =0f;
+
+
     static {
         if(NovelTest == true){
             NovelPath = "D:\\HanLP\\novel\\平凡的世界.txt"; // 语料入口

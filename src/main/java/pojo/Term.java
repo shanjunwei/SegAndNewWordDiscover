@@ -11,24 +11,24 @@ public class Term implements Serializable {
     /**
      * 互信息值
      */
-    public double mi;
+    public float mi;
     /**
      * 左信息熵
      */
-    public double le;
+    public float le;
     /**
      * 右信息熵
      */
-    public double re;
+    public float re;
     /**
      * 分数 最终的归一化分数
      */
-    public double score;
+    public float score;
 
     public Term() {
     }
 
-    public Term(String seg, int count, double mi, double le, double re) {
+    public Term(String seg, int count, float mi, float le, float re) {
         this.seg = seg;
         this.count = count;
         this.mi = mi;
@@ -36,7 +36,7 @@ public class Term implements Serializable {
         this.re = re;
     }
 
-    public Term(String seg, int count, double mi, double le, double re, double score) {
+    public Term(String seg, int count, float mi, float le, float re, float score) {
         this.seg = seg;
         this.count = count;
         this.mi = mi;
@@ -61,35 +61,35 @@ public class Term implements Serializable {
         this.count = count;
     }
 
-    public double getMi() {
+    public float getMi() {
         return mi;
     }
 
-    public void setMi(double mi) {
+    public void setMi(float mi) {
         this.mi = mi;
     }
 
-    public double getLe() {
+    public float getLe() {
         return le;
     }
 
-    public void setLe(double le) {
+    public void setLe(float le) {
         this.le = le;
     }
 
-    public double getRe() {
+    public float getRe() {
         return re;
     }
 
-    public void setRe(double re) {
+    public void setRe(float re) {
         this.re = re;
     }
 
-    public double getScore() {
+    public float getScore() {
         return score;
     }
 
-    public void setScore(double score) {
+    public void setScore(float score) {
         this.score = score;
     }
 }

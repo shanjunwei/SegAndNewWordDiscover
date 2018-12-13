@@ -13,7 +13,8 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="Maven: commons-lang:commons-lang:2.6" level="project" />
     <orderEntry type="library" name="Maven: com.belerweb:pinyin4j:2.5.0" level="project" />
-    <orderEntry type="library" name="Maven: com.hankcs:aho-corasick-double-array-trie:1.2.0" level="project" />
+    <orderEntry type="library" name="Maven: com.sun:rt:1.5.0_06" level="project" />
+    <orderEntry type="library" name="Maven: com.hankcs:aho-corasick-float-array-trie:1.2.0" level="project" />
     <orderEntry type="library" name="Maven: com.google.code.gson:gson:2.8.0" level="project" />
   </component>
 </module>
