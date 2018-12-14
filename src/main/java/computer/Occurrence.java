@@ -14,7 +14,6 @@ import static config.Constants.*;
  * 词共现 统计量计算,包括 互信息,左右熵
  */
 public class Occurrence {
-
     /**
      * 全部 切分 数量
      */
@@ -24,8 +23,6 @@ public class Occurrence {
      * 切分段 去重后频数累计和
      */
     static float totalCount;
-
-
     public Occurrence() {
     }
 
@@ -149,7 +146,7 @@ public class Occurrence {
         //term.score = term.mi / totalMI + term.le / totalLE + term.re / totalRE;   // 归一化
         //term.score = term.mi / totalMI + Math.min(term.le / totalLE, term.re / totalRE);   // 01更换归一化策略 -> 取左右熵最小值
         // 用log 函数进行归一化,参考 http://www.cnblogs.com/pejsidney/p/8031250.html
-        float normalizedMi = (float) (Math.log(term.mi) / Math.log(maxMI));  // 归一化信息熵
+        float normalizedMi = (float) (Math.log(term.mi) / Math.log(maxMI))*2;  // 归一化信息熵
         float normalizedEntropy = (float) (Math.log(Math.min(term.le, term.re)) / Math.log(term.le < term.re ? maxLE : maxRE));  // 归一化左右熵
         term.score = normalizedMi + normalizedEntropy + getEntropyRate(term.le, term.re);          // 加入左右熵紧密程度的度量
         if (DEBUG_MODE)

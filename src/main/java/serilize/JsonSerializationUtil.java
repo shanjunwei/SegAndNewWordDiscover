@@ -59,8 +59,6 @@ public class JsonSerializationUtil {
                 maxRE = segTermMap.get(MAX_KEY).getRe();
                 maxMI = segTermMap.get(MAX_KEY).getMi();      // 反序列化统计量
             }
-
-
         } catch (IOException e) {
             e.printStackTrace();
         }

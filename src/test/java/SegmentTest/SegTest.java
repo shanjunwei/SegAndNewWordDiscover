@@ -4,27 +4,30 @@ import config.Constants;
 import org.apache.commons.lang.StringUtils;
 import seg.Segment;
 
+import java.io.*;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static config.Config.ErrorSegPath;
 import static config.Constants.DEBUG_MODE;
 
+/**
+ * 分词测试类
+ */
 public class SegTest {
-
-
     public static void main(String[] args) {
-        Constants.NovelTest = true;
+        // Constants.NovelTest = true;
         testSingleSentenceSeg(args);
         //testRepeatRegx(args);
+        //testDebugByFileLine();
     }
 
-
     /**
-     *  测试单个句子
+     * 测试单个句子
      */
     public static void testSingleSentenceSeg(String[] args) {
-        if(args.length <1)  System.exit(0);
+        if (args.length < 1) System.exit(0);
         String test_text = args[0];     // 测试文本通过标准输入传入
         if (StringUtils.isBlank(test_text)) System.exit(0);
         //  将信息熵 互信息等统计量加入到过滤决策机制中
@@ -36,7 +39,7 @@ public class SegTest {
     }
 
     /**
-     *  测试 例子 孙少平 少平
+     * 测试 例子 孙少平 少平
      */
     public static void testRepeatRegx(String[] args) {
         String regEx = "少平";
@@ -44,7 +47,31 @@ public class SegTest {
         Matcher m = p.matcher(args[0]);
         while (m.find()) {
             String find = m.group();
-            System.out.println(find + " ["+m.start() + "-"+m.end()+"]");
+            System.out.println(find + " [" + m.start() + "-" + m.end() + "]");
+        }
+    }
+
+    /**
+     * 测试 之前分错的前1000行并输出调试信息
+     */
+    public static void testDebugByFileLine() {
+        int count = 0;
+        Segment segment = new Segment();
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(ErrorSegPath), "utf-8"))) {
+            String text;
+            while ((text = reader.readLine()) != null && count < 600) {
+                if (StringUtils.isNotBlank(text)) {
+                    List<String> result = segment.segment(text);
+                    count++;
+                    System.out.println("\n*************************分词结果集" + result + "*************************\n");
+                }
+            }
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }

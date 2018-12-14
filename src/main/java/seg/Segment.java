@@ -29,30 +29,6 @@ public class Segment {
     }
 
     public static void main(String[] args) {
-        /*int count = 0;
-        try {
-            // 以utf-8读取文件
-            FileInputStream fis = new FileInputStream(ErrorSegPath);
-            InputStreamReader reader = new InputStreamReader(fis, "UTF-8");
-            BufferedReader br = new BufferedReader(reader);
-            String str = null;
-            while ((str = br.readLine()) != null) {
-                if (count > 1000) {
-                    break;
-                }
-                if (StringUtils.isNotBlank(str)) {
-                    List<String> result = segment.segment(str);
-                    count++;
-                    System.out.println("\n*************************分词结果集" + result + "*************************\n");
-                }
-            }
-            br.close();
-            reader.close();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }*/
 
     }
 
@@ -86,7 +62,7 @@ public class Segment {
         if (StringUtils.isBlank(text)) return "";
 
         String[] replaceNonChinese = HanUtils.replaceNonChineseCharacterAsBlank(text);
-        List<String> exactWords = new ArrayList<>();
+        List<Term> exactWords = new ArrayList<>();
         for (int i = 0; i < replaceNonChinese.length; i++) {
             String textDS = replaceNonChinese[i];   // 这里没有逗号
             if (StringUtils.isNotBlank(textDS)) {
@@ -94,15 +70,15 @@ public class Segment {
                 List<Term> termList = HanUtils.segmentToTerm(textDS, false);
                 // 词提取
                 if (termList == null) {    //  单独一个字的
-                    exactWords.add(textDS);
+                    exactWords.add(new Term(textDS, 0, textDS.length()));
                 } else {
-                    List<String> result = extractWordsFromNGram(termList);
+                    List<Term> result = extractWordsFromNGram(termList);
                     exactWords.addAll(result);
                 }
             }
         }
 
-        text = HanUtils.handleSentenceWithExtractWords(text,exactWords);  //  先处理抽词
+        text = HanUtils.handleSentenceWithExtractWords(text, exactWords);  //  先处理抽词
         //  正则特殊字符处理
         boolean hasSpecialCharacter = (boolean) HanUtils.makeQueryStringAllRegExp(text).get(HAS_SPECIAL_CHAR);
         if (hasSpecialCharacter)
@@ -113,9 +89,6 @@ public class Segment {
                 text = text.replaceAll(nonChinese, " " + nonChinese + " ");
             }
         }
-//        for (String seg : exactWords) {
-//            text = text.replaceAll(seg, " " + seg + " ");    // 这样做有一定隐患 比如 5 25 ;孙少平 少平
-//        }
         text = text.trim();   // 去首尾空格
         text = text.replaceAll("\\s{1,}", " ");  // 去连续空格
         // 还原
@@ -129,10 +102,9 @@ public class Segment {
      * @param termList 候选集   FMM 切分串
      * @return 置信度过滤， 过滤的结果无交集
      */
-    public List<String> extractWordsFromNGram(List<Term> termList) {
+    public List<Term> extractWordsFromNGram(List<Term> termList) {
         // 将切分结果集分为以首字符区分的若干组
-        List<List<Term>> teams = new ArrayList<>();  //  分组集合
-        //List<String> seg_list = new ArrayList<>(termList);
+        List<List<Term>> teams = new ArrayList<>();  //  分组集合   //List<String> seg_list = new ArrayList<>(termList);
         int p = 0;
         String history = termList.get(0).getSeg().substring(0, 1);
         String seg = termList.get(0).getSeg();
@@ -144,7 +116,6 @@ public class Segment {
                 p++;
 
                 if (p >= termList.size()) break;
-
                 firstChar = termList.get(p).getSeg().substring(0, 1);
             }
             teams.add(seg_team);
@@ -162,7 +133,7 @@ public class Segment {
         // 排序
         if (DEBUG_MODE) System.out.println("第二轮筛选前: " + result_list);
         result_list.sort((o1, o2) -> Double.compare(segTermMap.get(o2.getSeg()).score, segTermMap.get(o1.getSeg()).score));
-        if (DEBUG_MODE) System.out.println("第二轮排序后: " + result_list);
+        if (DEBUG_MODE) System.out.println("第二轮排序后——————————> " + result_list);
         List<Term> final_result = new ArrayList<>();
         for (int i = 0; i < result_list.size(); i++) {
             if (final_result.isEmpty()) {
@@ -172,11 +143,9 @@ public class Segment {
                 final_result.add(result_list.get(i));
             }
         }
-        List<String> result = new ArrayList<>();
-        for (Term word : final_result) {
-            result.add(word.getSeg());
-        }
-        return result;
+        final_result.sort(Comparator.comparing(term -> term.getLeftBound()));       // 结果再按照原来的位置排序
+        if (DEBUG_MODE) System.out.println("抽词###########——————————> " + final_result);
+        return final_result;
     }
 
     //  第一轮筛选
@@ -219,7 +188,7 @@ public class Segment {
             }
         }
         // 对候选集根据 归一化得分 降序排列
-        result.sort((o1, o2) -> Double.compare(segTermMap.get(o2).score, segTermMap.get(o1).score));
+        result.sort((o1, o2) -> Double.compare(segTermMap.get(o2.getSeg()).score, segTermMap.get(o1.getSeg()).score));
         if (DEBUG_MODE) System.out.println("   第一轮排序后*****->   " + result + "\n");
         //System.out.println("   第一轮筛选结果->   " + termList.get(0) + "\n");
         return result.size() == 0 ? null : result.get(0);

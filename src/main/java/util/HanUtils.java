@@ -1,7 +1,6 @@
 package util;
 
 
-import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils;
 import computer.Occurrence;
 import config.Constants;
 import net.sourceforge.pinyin4j.PinyinHelper;
@@ -154,8 +153,9 @@ public class HanUtils {
 
     /**
      * 利用抽取出来的词对原句进行切分处理   这是词语抽取向分词转变的过程
+     * 存在bug,传进来的exactWords不是按顺序来的,而是排序之后的结果
      */
-    public static String handleSentenceWithExtractWords(String sentence, List<String> exactWords) {
+    public static String handleSentenceWithExtractWords2(String sentence, List<String> exactWords) {
         if (exactWords == null || StringUtils.isBlank(sentence)) return sentence;
 
         StringBuilder stringBuilder = new StringBuilder(sentence);
@@ -184,22 +184,38 @@ public class HanUtils {
             }
         }
 
-        System.out.println("插值后stringBuilder__> "+stringBuilder.toString());
+        System.out.println("插值后stringBuilder__> " + stringBuilder.toString());
 
-        sentence  = stringBuilder.toString();
+        sentence = stringBuilder.toString();
         for (Term word : termExactWords) {
-            String  hatWord = word.getSeg() + Occurrence.getShiftStandardPostion(word.leftBound,word.rightBound);  // 带边界的词
-            System.out.println("单边街的词---》"+hatWord);
-            sentence = sentence.replaceAll(hatWord, " "+word.getSeg()+" ");    // 这样做有一定隐患 比如 5 25 ;孙少平 少平
+            String hatWord = word.getSeg() + Occurrence.getShiftStandardPostion(word.leftBound, word.rightBound);  // 带边界的词
+            System.out.println("单边街的词---》" + hatWord);
+            sentence = sentence.replaceAll(hatWord, " " + word.getSeg() + " ");    // 这样做有一定隐患 比如 5 25 ;孙少平 少平
         }
-        System.out.println("处理完后的元句子-->"+sentence);
-      //  System.exit(0);
+        System.out.println("处理完后的元句子-->" + sentence);
         return sentence;
     }
 
-
-    public static void main(String[] args) {
-        System.out.println(Arrays.asList(replaceNonChineseCharacterAddBlank("")));
+    /**
+     * 利用抽取出来的词对原句进行切分处理   这是词语抽取向分词转变的过程
+     * 传进来的exactWords是按顺序来的
+     */
+    public static String handleSentenceWithExtractWords(String sentence, List<Term> exactWords) {
+        StringBuilder stringBuilder = new StringBuilder(sentence);
+        int shift = 0;  // 偏移量
+        for (Term term : exactWords) {
+            stringBuilder.insert(term.rightBound + shift, Occurrence.getShiftStandardPostion(term.leftBound, term.rightBound));  // 因为插值的原因,位置发生偏移
+            shift = shift + 6;
+        }
+        //System.out.println("插值后stringBuilder__> "+stringBuilder.toString());
+        sentence = stringBuilder.toString();
+        for (Term word : exactWords) {
+            String hatWord = word.getSeg() + Occurrence.getShiftStandardPostion(word.leftBound, word.rightBound);  // 带边界的词
+            //System.out.println("单边街的词---》"+hatWord);
+            sentence = sentence.replaceAll(hatWord, " " + word.getSeg() + " ");    // 这样做有一定隐患 比如 5 25 ;孙少平 少平
+        }
+        //System.out.println("处理完后的元句子-->"+sentence);
+        return sentence;
     }
 
 
@@ -408,21 +424,28 @@ public class HanUtils {
 
     /**
      * 判断字符串是否有交集的算法更正
+     * 这里有bug
      */
     public static boolean hasCommonStr(Term str1, Term str2) {  // 控制参数，是否是第一轮筛选
-        int leftBound11 = str1.leftBound;
-        int rightBound12 = str1.rightBound;
-        int leftBound21 = str2.leftBound;
-        int rightBound22 = str2.rightBound;
-        if (leftBound21 >= leftBound11 && leftBound21 < rightBound12) {
-            return true;
-        }
-        if (rightBound22 > leftBound11 && rightBound22 < rightBound12) {
+        if (isInnerBound(str1, str2) || isInnerBound(str2, str1)) {
             return true;
         }
         return false;
     }
 
+    public static boolean isInnerBound(Term str1, Term str2) {  // 控制参数，是否是第一轮筛选
+        int leftBoundOfStr1 = str1.leftBound;
+        int rightBoundOfStr1 = str1.rightBound;
+        int leftBoundOfStr2 = str2.leftBound;
+        int rightBoundOfStr2 = str2.rightBound;
+        if (leftBoundOfStr2 >= leftBoundOfStr1 && leftBoundOfStr2 < rightBoundOfStr1) {
+            return true;
+        }
+        if (rightBoundOfStr2 > leftBoundOfStr1 && rightBoundOfStr2 < rightBoundOfStr1) {
+            return true;
+        }
+        return false;
+    }
 
     /**
      * 反转字符串
