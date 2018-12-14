@@ -47,14 +47,17 @@ public class Occurrence {
             // 1. 计算信息熵
             float rightEntropy = computeRightEntropy(seg);
             RElist.add(rightEntropy);
-            totalRE = totalRE + rightEntropy;
+            //totalRE = totalRE + rightEntropy;
+            maxRE = Math.max(maxRE, rightEntropy);  // 求最大右信息熵
             float leftEntropy = computeLeftEntropy(seg);
             LElist.add(leftEntropy);
-            totalLE = totalLE + leftEntropy;
+            // totalLE = totalLE + leftEntropy;
+            maxLE = Math.max(maxLE, rightEntropy);  // 求最大左信息熵
             // 2. 计算互信息
             float mi = computeMutualInformation(seg);
             MI_list.add(mi);
-            totalMI = totalMI + mi;
+            //totalMI = totalMI + mi;
+            maxMI = Math.max(maxMI, mi);   // 计算最大互信息
             Term term = new Term(seg, wcMap.get(seg), mi, leftEntropy, rightEntropy);
             segTermMap.put(seg, term);
             count++;
@@ -138,8 +141,11 @@ public class Occurrence {
     /**
      * 得到归一化值
      */
-    public float getNormalizedScore(String seg) {
-        Term term = segTermMap.get(seg);
+    public float getNormalizedScore(Term term) {
+        if (term == null) {
+            return 0f;
+        }
+        // Term term = segTermMap.get(seg);
         //term.score = term.mi / totalMI + term.le / totalLE + term.re / totalRE;   // 归一化
         //term.score = term.mi / totalMI + Math.min(term.le / totalLE, term.re / totalRE);   // 01更换归一化策略 -> 取左右熵最小值
         // 用log 函数进行归一化,参考 http://www.cnblogs.com/pejsidney/p/8031250.html
@@ -147,7 +153,7 @@ public class Occurrence {
         float normalizedEntropy = (float) (Math.log(Math.min(term.le, term.re)) / Math.log(term.le < term.re ? maxLE : maxRE));  // 归一化左右熵
         term.score = normalizedMi + normalizedEntropy + getEntropyRate(term.le, term.re);          // 加入左右熵紧密程度的度量
         if (DEBUG_MODE)
-            System.out.println(seg + "   mi->   " + term.mi + "->" + normalizedMi + " le->" + term.le + " re->" + term.re + "->" + normalizedEntropy + " ER->" + getEntropyRate(term.le, term.re) + " score->" + term.score + "\n");
+            System.out.println(term.seg + "   mi->   " + term.mi + "->" + normalizedMi + " le->" + term.le + " re->" + term.re + "->" + normalizedEntropy + " ER->" + getEntropyRate(term.le, term.re) + " score->" + term.score + "\n");
         return term.score;
     }
 
@@ -184,4 +190,19 @@ public class Occurrence {
         if (mi < MI_THRESHOLD_VALUE) return true;
         return false;
     }
+
+    /**
+     * 标准化偏移位置插值,目的是为了让插入的值的长度大小固定
+     * TODO: 这里假设句子不够长,最长不过100个字
+     */
+    public static String getShiftStandardPostion(int left, int right) {
+        StringBuilder stringBuilder = new StringBuilder();
+        if (left < 10) stringBuilder.append(0);
+        stringBuilder.append(left);
+        stringBuilder.append("->");
+        if (right < 10) stringBuilder.append(0);
+        stringBuilder.append(right);
+        return stringBuilder.toString();
+    }
+
 }

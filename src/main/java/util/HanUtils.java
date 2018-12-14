@@ -1,6 +1,8 @@
 package util;
 
 
+import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils;
+import computer.Occurrence;
 import config.Constants;
 import net.sourceforge.pinyin4j.PinyinHelper;
 import net.sourceforge.pinyin4j.format.HanyuPinyinCaseType;
@@ -8,13 +10,13 @@ import net.sourceforge.pinyin4j.format.HanyuPinyinOutputFormat;
 import net.sourceforge.pinyin4j.format.HanyuPinyinToneType;
 import net.sourceforge.pinyin4j.format.exception.BadHanyuPinyinOutputFormatCombination;
 import org.apache.commons.lang.StringUtils;
+import pojo.Term;
 
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static config.Config.MAX_WORD_LEN;
-import static config.Config.entropy_theta;
 import static config.Constants.singWordCountMap;
 import static config.Constants.wcMap;
 
@@ -74,10 +76,6 @@ public class HanUtils {
         return pinyinName.toString();
     }
 
-
-
-
-
     // 将非中文字符  以及中文停用词  以空格替代
     public static String[] replaceNonChineseCharacterAsBlank(String text) {
         StringBuilder stringBuilder = new StringBuilder();
@@ -107,6 +105,7 @@ public class HanUtils {
         }
         return str;
     }
+
     /**
      * 2      * 转义正则特殊字符 （$()*+.[]?\^{}
      * 3      * \\需要第一个替换，否则replace方法替换时会有逻辑bug
@@ -153,9 +152,54 @@ public class HanUtils {
         return nonChinese_result;
     }
 
+    /**
+     * 利用抽取出来的词对原句进行切分处理   这是词语抽取向分词转变的过程
+     */
+    public static String handleSentenceWithExtractWords(String sentence, List<String> exactWords) {
+        if (exactWords == null || StringUtils.isBlank(sentence)) return sentence;
+
+        StringBuilder stringBuilder = new StringBuilder(sentence);
+        Map<Integer, String> beginSegMap = new HashMap<>();
+        List<Term> termExactWords = new ArrayList<>();
+        List<String> hatExactWords = new ArrayList<>();
+        int shift = 0;
+        for (String word : exactWords) {
+            Pattern p = Pattern.compile(word);
+            Matcher m = p.matcher(sentence);
+            while (m.find()) {
+                String find = m.group();
+                Term seg = new Term(find, m.start(), m.end());
+                if (termExactWords.isEmpty()) {
+                    termExactWords.add(seg);
+                    //  在原句子seg后面加上边界值
+                    stringBuilder.insert(m.end() + shift, Occurrence.getShiftStandardPostion(seg.leftBound, seg.rightBound));  // 因为插值的原因,位置发生偏移
+                    shift = shift + 6;
+                }
+                if (HanUtils.hasNonCommonWithAllAddedResultSet(termExactWords, seg)) {
+                    termExactWords.add(seg);
+                    //  在原句子seg后面加上边界值
+                    stringBuilder.insert(m.end() + shift, Occurrence.getShiftStandardPostion(seg.leftBound, seg.rightBound));  // 因为插值的原因,位置发生偏移
+                    shift = shift + 6;
+                }
+            }
+        }
+
+        System.out.println("插值后stringBuilder__> "+stringBuilder.toString());
+
+        sentence  = stringBuilder.toString();
+        for (Term word : termExactWords) {
+            String  hatWord = word.getSeg() + Occurrence.getShiftStandardPostion(word.leftBound,word.rightBound);  // 带边界的词
+            System.out.println("单边街的词---》"+hatWord);
+            sentence = sentence.replaceAll(hatWord, " "+word.getSeg()+" ");    // 这样做有一定隐患 比如 5 25 ;孙少平 少平
+        }
+        System.out.println("处理完后的元句子-->"+sentence);
+      //  System.exit(0);
+        return sentence;
+    }
+
 
     public static void main(String[] args) {
-        System.out.println(Arrays.asList(replaceNonChineseCharacterAddBlank("中国人民争取和平与裁军委员会代表团是应老挝和平与团结委员会的邀请于12月25日抵老进行为期5天的友好访问的")));
+        System.out.println(Arrays.asList(replaceNonChineseCharacterAddBlank("")));
     }
 
 
@@ -233,7 +277,7 @@ public class HanUtils {
     // 切分词  FMM 算法
     public static List<String> getFMMList(String text, boolean countWordFrequency) {
         // 额外统计单个字的词频
-        if (countWordFrequency){
+        if (countWordFrequency) {
             System.out.println("统计单个字的词频");
             wordCountSingleWord(text);
         }
@@ -269,6 +313,45 @@ public class HanUtils {
             p++;
         }
         return result;
+    }
+
+
+    // 切分词  FMM 算法
+    public static List<Term> segmentToTerm(String text, boolean countWordFrequency) {
+        //  送进来的切先以停用词切分
+        List<Term> termList = new ArrayList<>();
+        if (text.length() == 1) {
+            return null;
+        }
+        int temp_max_len = Math.min(text.length() + 1, MAX_WORD_LEN);
+        int p = 0;
+        while (p < text.length()) {
+            int q = 1;
+            while (q < temp_max_len) {  // 控制取词的长度
+                if (q == 1) {
+                    q++;
+                    continue;  // 长度为1略过,单个汉字不具有分词意义
+                }
+                // 取词串  p --> p+q
+                if (p + q > text.length()) {
+                    break;
+                }
+                String strChar = text.substring(p, p + q);
+                Term term = new Term(strChar, p, p + q);
+                termList.add(term);
+                // 统计词串的词频
+                if (countWordFrequency) {
+                    if (wcMap.containsKey(strChar)) {
+                        wcMap.put(strChar, wcMap.get(strChar) + 1);
+                    } else {
+                        wcMap.put(strChar, 1);
+                    }
+                }
+                q++;
+            }
+            p++;
+        }
+        return termList;
     }
 
 
@@ -312,6 +395,34 @@ public class HanUtils {
         }
         return false;
     }
+
+    public static boolean hasNonCommonWithAllAddedResultSet(List<Term> AddedResultSet, Term key) {
+        Iterator<Term> iterator = AddedResultSet.iterator();
+        while (iterator.hasNext()) {
+            if (hasCommonStr(iterator.next(), key)) {    // 这里的逻辑有误--> 应该是与之前加入结果集任何字符串都不重合
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * 判断字符串是否有交集的算法更正
+     */
+    public static boolean hasCommonStr(Term str1, Term str2) {  // 控制参数，是否是第一轮筛选
+        int leftBound11 = str1.leftBound;
+        int rightBound12 = str1.rightBound;
+        int leftBound21 = str2.leftBound;
+        int rightBound22 = str2.rightBound;
+        if (leftBound21 >= leftBound11 && leftBound21 < rightBound12) {
+            return true;
+        }
+        if (rightBound22 > leftBound11 && rightBound22 < rightBound12) {
+            return true;
+        }
+        return false;
+    }
+
 
     /**
      * 反转字符串

@@ -15,6 +15,7 @@ public class Constants {
 
     public static final String  HAS_SPECIAL_CHAR  = "hasSpecial";
     public static final String  STR_REPLACE_SPECIAL  = "str";
+    public static final String  MAX_KEY  = "max";
 
     public static boolean NovelTest = false;   // 是测试小说还是人民日报语料,默认的是人名日报
     public static  String NOVEL;

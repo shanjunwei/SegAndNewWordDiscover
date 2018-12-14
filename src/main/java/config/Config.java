@@ -19,6 +19,7 @@ public class Config {
     public static String NovelPath =   "D:\\data\\test-text.txt"; // 语料入口
     public static String DebugPath = "F:\\JAVATools\\HanLP\\人名日报\\666.txt";   //  debug 信息输出
     public static final String segTermMapPath = "data\\segTermMap.txt";   //序列化文件输出路径
+    public static String ErrorSegPath =   "data/error_seg.txt"; // 切分错误的行记录
 
     /**
      * 切分段去重后 总互信息

@@ -28,8 +28,9 @@ public class JsonSerializationUtil {
         Occurrence occurrence = new Occurrence();
         occurrence.addAllSegAndCompute(wcMap);   // 计算统计量
 
-        Term term = new Term("####", 0, totalMI, totalLE, totalRE);
-        segTermMap.put("####", term);
+        // Term term = new Term("####", 0, totalMI, totalLE, totalRE);
+        Term term = new Term(MAX_KEY, 0, maxMI, maxLE, maxRE);
+        segTermMap.put(MAX_KEY, term);
         try {
             JsonSerializationUtil.serilizableForMap(segTermMap, Config.segTermMapPath);
         } catch (IOException e) {
@@ -37,6 +38,7 @@ public class JsonSerializationUtil {
         }
         System.exit(0);
     }
+
     /**
      * 反序列化统计量到内存
      */
@@ -44,9 +46,21 @@ public class JsonSerializationUtil {
         long t1 = System.currentTimeMillis();
         try {
             segTermMap = JsonSerializationUtil.deserilizableForMapFromFile(Config.segTermMapPath);
-            Config.totalRE = segTermMap.get("####").getRe();
-            Config.totalLE = segTermMap.get("####").getLe();
-            Config.totalMI = segTermMap.get("####").getMi();
+//            Config.totalRE = segTermMap.get("####").getRe();
+//            Config.totalLE = segTermMap.get("####").getLe();
+//            Config.totalMI = segTermMap.get("####").getMi();
+
+            if (NovelTest == true) {
+                Config.maxRE = segTermMap.get("####").getRe();
+                Config.maxLE = segTermMap.get("####").getLe();
+                Config.maxMI = segTermMap.get("####").getMi();
+            } else {
+                maxLE = segTermMap.get(MAX_KEY).getLe();
+                maxRE = segTermMap.get(MAX_KEY).getRe();
+                maxMI = segTermMap.get(MAX_KEY).getMi();      // 反序列化统计量
+            }
+
+
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -62,6 +76,7 @@ public class JsonSerializationUtil {
                 }.getType());
         return map;
     }
+
     /* 将HashMap序列化为字符串存入json文件中 */
     public static String serilizableForMap(Object objMap, String OutfilePathName)
             throws IOException {

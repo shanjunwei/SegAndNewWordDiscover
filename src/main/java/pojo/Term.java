@@ -3,11 +3,14 @@ package pojo;
 import java.io.Serializable;
 
 /**
- *   存储每个切分 和他们的一些统计信息
+ * 存储每个切分 和他们的一些统计信息
  */
 public class Term implements Serializable {
-    public   String  seg;   // 切分片段
-    public   int  count;   // 频次
+    public String seg;   // 切分片段
+    public int count;   // 频次
+
+    public int leftBound;  // 左边界  在原来短句中的起始索引位置
+    public int rightBound;  // 右边界
     /**
      * 互信息值
      */
@@ -43,6 +46,23 @@ public class Term implements Serializable {
         this.le = le;
         this.re = re;
         this.score = score;
+    }
+
+    public Term(String seg, int count, int leftBound, int rightBound, float mi, float le, float re, float score) {
+        this.seg = seg;
+        this.count = count;
+        this.leftBound = leftBound;
+        this.rightBound = rightBound;
+        this.mi = mi;
+        this.le = le;
+        this.re = re;
+        this.score = score;
+    }
+
+    public Term(String seg, int leftBound, int rightBound) {
+        this.seg = seg;
+        this.leftBound = leftBound;
+        this.rightBound = rightBound;
     }
 
     public String getSeg() {
@@ -91,5 +111,26 @@ public class Term implements Serializable {
 
     public void setScore(float score) {
         this.score = score;
+    }
+
+    public int getLeftBound() {
+        return leftBound;
+    }
+
+    public void setLeftBound(int leftBound) {
+        this.leftBound = leftBound;
+    }
+
+    public int getRightBound() {
+        return rightBound;
+    }
+
+    public void setRightBound(int rightBound) {
+        this.rightBound = rightBound;
+    }
+
+    @Override
+    public String toString() {
+        return seg;
     }
 }
