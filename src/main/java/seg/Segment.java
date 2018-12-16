@@ -1,20 +1,16 @@
 package seg;
 
 import computer.Occurrence;
-import config.Config;
-import config.Constants;
 import org.apache.commons.lang.StringUtils;
 import pojo.Term;
 import serilize.JsonSerializationUtil;
-import util.FileUtils;
 import util.HanUtils;
 
-import java.io.*;
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
 
-import static config.Config.ErrorSegPath;
 import static config.Constants.*;
 
 /**
@@ -78,7 +74,7 @@ public class Segment {
             }
         }
 
-        text = HanUtils.handleSentenceWithExtractWords(text, exactWords);  //  先处理抽词
+        text = HanUtils.handleSentenceWithExtractWords2(text, exactWords);  //  先处理抽词
         //  正则特殊字符处理
         boolean hasSpecialCharacter = (boolean) HanUtils.makeQueryStringAllRegExp(text).get(HAS_SPECIAL_CHAR);
         if (hasSpecialCharacter)

@@ -1,16 +1,17 @@
 package SegmentTest;
 
-import config.Constants;
+import config.Config;
 import org.apache.commons.lang.StringUtils;
 import seg.Segment;
+import serilize.JsonSerializationUtil;
 
 import java.io.*;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static config.Config.ErrorSegPath;
 import static config.Constants.DEBUG_MODE;
+import static config.Constants.NovelTest;
 
 /**
  * 分词测试类
@@ -18,9 +19,10 @@ import static config.Constants.DEBUG_MODE;
 public class SegTest {
     public static void main(String[] args) {
         // Constants.NovelTest = true;
-        testSingleSentenceSeg(args);
+       // testSingleSentenceSeg(args);
         //testRepeatRegx(args);
-        //testDebugByFileLine();
+        //testCalculationAndSerializationToFile();    //  计算并序列化到文件
+        testDebugByFileLine("H:\\小说\\《冰与火之歌》全集.txt",100);   // debug
     }
 
     /**
@@ -54,12 +56,13 @@ public class SegTest {
     /**
      * 测试 之前分错的前1000行并输出调试信息
      */
-    public static void testDebugByFileLine() {
+    public static void testDebugByFileLine(String inputPath, int line) {
+        DEBUG_MODE = true;
         int count = 0;
         Segment segment = new Segment();
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(ErrorSegPath), "utf-8"))) {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(inputPath), "utf-8"))) {
             String text;
-            while ((text = reader.readLine()) != null && count < 600) {
+            while ((text = reader.readLine()) != null && count < line) {
                 if (StringUtils.isNotBlank(text)) {
                     List<String> result = segment.segment(text);
                     count++;
@@ -73,5 +76,14 @@ public class SegTest {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * 测试 整个文本库计算并序列化计算结果到文件
+     */
+    public static void testCalculationAndSerializationToFile() {
+        NovelTest = true;
+        Config.NovelPath = "H:\\小说\\《冰与火之歌》全集.txt";
+        JsonSerializationUtil.serilizableStatisticsToFile();
     }
 }

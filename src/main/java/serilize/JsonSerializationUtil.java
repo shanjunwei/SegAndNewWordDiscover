@@ -16,8 +16,10 @@ import static config.Constants.segTermMap;
 
 public class JsonSerializationUtil {
     private static Gson gson = new Gson();
-
-    /* 序列化计算结果到文件中,只要调用一次 */
+    /**
+     *   序列化计算结果到文件中,只要调用一次
+     *   数据预处理  计算 序列化全部在里面做了
+     */
     public static void serilizableStatisticsToFile() {
         PreProcess preProcess = new PreProcess();
         if (NovelTest) {
@@ -46,19 +48,15 @@ public class JsonSerializationUtil {
         long t1 = System.currentTimeMillis();
         try {
             segTermMap = JsonSerializationUtil.deserilizableForMapFromFile(Config.segTermMapPath);
-//            Config.totalRE = segTermMap.get("####").getRe();
-//            Config.totalLE = segTermMap.get("####").getLe();
-//            Config.totalMI = segTermMap.get("####").getMi();
-
-            if (NovelTest == true) {
-                Config.maxRE = segTermMap.get("####").getRe();
-                Config.maxLE = segTermMap.get("####").getLe();
-                Config.maxMI = segTermMap.get("####").getMi();
-            } else {
+//            if (NovelTest == true) {
+//                Config.maxRE = segTermMap.get("####").getRe();
+//                Config.maxLE = segTermMap.get("####").getLe();
+//                Config.maxMI = segTermMap.get("####").getMi();
+//            } else {
                 maxLE = segTermMap.get(MAX_KEY).getLe();
                 maxRE = segTermMap.get(MAX_KEY).getRe();
                 maxMI = segTermMap.get(MAX_KEY).getMi();      // 反序列化统计量
-            }
+           // }
         } catch (IOException e) {
             e.printStackTrace();
         }

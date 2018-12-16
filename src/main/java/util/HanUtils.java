@@ -155,7 +155,7 @@ public class HanUtils {
      * 利用抽取出来的词对原句进行切分处理   这是词语抽取向分词转变的过程
      * 存在bug,传进来的exactWords不是按顺序来的,而是排序之后的结果
      */
-    public static String handleSentenceWithExtractWords2(String sentence, List<String> exactWords) {
+    public static String handleSentenceWithExtractWords2(String sentence, List<Term> exactWords) {
         if (exactWords == null || StringUtils.isBlank(sentence)) return sentence;
 
         StringBuilder stringBuilder = new StringBuilder(sentence);
@@ -163,8 +163,8 @@ public class HanUtils {
         List<Term> termExactWords = new ArrayList<>();
         List<String> hatExactWords = new ArrayList<>();
         int shift = 0;
-        for (String word : exactWords) {
-            Pattern p = Pattern.compile(word);
+        for (Term word : exactWords) {
+            Pattern p = Pattern.compile(word.getSeg());
             Matcher m = p.matcher(sentence);
             while (m.find()) {
                 String find = m.group();
