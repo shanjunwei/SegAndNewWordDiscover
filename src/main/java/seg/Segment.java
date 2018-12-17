@@ -1,6 +1,7 @@
 package seg;
 
 import computer.Occurrence;
+import config.Constants;
 import org.apache.commons.lang.StringUtils;
 import pojo.Term;
 import serilize.JsonSerializationUtil;
@@ -17,15 +18,10 @@ import static config.Constants.*;
  * 基于互信息 和信息熵的分词与新词发现
  */
 public class Segment {
-    //public static StringBuilder debug_Info = new StringBuilder();   // debug 信息，用于存于文件中
     // 数据预处理先做
     static {
         //JsonSerializationUtil.serilizableStatisticsToFile();    // 序列化计算结果
         JsonSerializationUtil.deserilizableStatistics();    // 反序列化
-    }
-
-    public static void main(String[] args) {
-
     }
 
     /**
@@ -35,18 +31,56 @@ public class Segment {
     public List<String> segment(String text) {
         if (StringUtils.isBlank(text)) return null;
         long t1 = System.currentTimeMillis();
-        String segResult = segmentByNonChineseFilter(text);
+        String segResult = segmentToString(text);
         System.out.println("分词耗时: " + (System.currentTimeMillis() - t1) + "  ms");
         return Arrays.asList(segResult.split(" "));
     }
 
     /**
-     * 暴露给外部调用的分词接口    TODO*************************TODO*******
-     * 传进来的参数 没有非中文字符，一个句子  TODO*************************TODO*******
-     * 评价程序调用的是这个函数*****************TODO*************************TODO*******
+     * 暴露给外部调用的分词接口 TODO*****
      */
     public String segmentToString(String text) {
-        return segmentByNonChineseFilter(text);
+        StringBuilder stringBuilder = new StringBuilder();
+        // 1. 以非中文分割，但是结尾数组中保留原来的非中文,目的是保留他们的位置
+        String[] array = HanUtils.splitWithNonChineseChar(text);
+        for (String str : array) {
+            if (HanUtils.isChineseCharacter(str)) {
+                stringBuilder.append(segmentWithAllChinese(str));
+            } else {
+                stringBuilder.append(str);
+            }
+        }
+        String result = stringBuilder.toString().trim();
+        result = result.replaceAll("\\s{1,}", " ");
+        return result;
+    }
+
+    /**
+     * //TODO  年份识别
+     * 暴露给外部调用的分词接口
+     * 传进来的参数 没有非中文字符，一个句子
+     */
+    public String segmentWithAllChinese(String text) {
+        if (StringUtils.isBlank(text)) return " ";
+
+        List<Term> termList = HanUtils.segmentToTerm(text, false);
+        List<Term> exactWords = new ArrayList<>();
+
+        // 词提取
+        if (termList == null) {    //  单独一个字的
+            exactWords.add(new Term(text, 0, text.length()));
+        } else {
+            List<Term> result = extractWordsFromNGram(termList);
+            exactWords.addAll(result);
+        }
+        text = HanUtils.handleSentenceWithExtractWords(text, exactWords);  //  先处理抽词
+        return text;
+    }
+
+    public static void main(String[] args) {
+        Constants.NovelTest = true;
+        Segment segment = new Segment();
+        segment.segmentWithAllChinese("国家主席孙少平国家主席孙少平");
     }
 
     /**
@@ -191,16 +225,3 @@ public class Segment {
     }
 
 }
-
-
-// 读取小说文本
-        /*String novel = FileUtils.readFileToString(Config.NovelPath);
-        String[] replaceNonChinese = HanUtils.replaceNonChineseCharacterAsBlank(novel);  // 去掉非中文字符   里边没有逗号
-        // 再拆分停用词
-        for (int i = 0; i < replaceNonChinese.length; i++) {
-            String textDS = replaceNonChinese[i];   // 这里没有逗号
-            if (StringUtils.isNotBlank(textDS) && textDS.length() != 1) {
-                System.out.println("原文本---> "+textDS);
-                System.out.println("切分后---> "+segment.segment(textDS));
-            }
-        }*/

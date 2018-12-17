@@ -75,6 +75,22 @@ public class HanUtils {
         return pinyinName.toString();
     }
 
+    public static String[] splitWithNonChineseChar(String text) {
+        // 中文验证规则
+        String regEx = "[^\\u4e00-\\u9fa5]+";    // 多个非中文字符
+        // 编译正则表达式
+        Pattern pattern = Pattern.compile(regEx);
+        // 忽略大小写的写法
+        Matcher matcher = pattern.matcher(text);
+        while (matcher.find()) {
+            text = text.replace(matcher.group(), " " + matcher.group() + " ");
+        }
+        String temp = text.trim();   // 去首尾空格
+        temp = temp.replaceAll("\\s{1,}", " ");  // 去连续空格
+        String[] result = temp.split(" ");
+        return result;
+    }
+
     // 将非中文字符  以及中文停用词  以空格替代
     public static String[] replaceNonChineseCharacterAsBlank(String text) {
         StringBuilder stringBuilder = new StringBuilder();
@@ -159,9 +175,7 @@ public class HanUtils {
         if (exactWords == null || StringUtils.isBlank(sentence)) return sentence;
 
         StringBuilder stringBuilder = new StringBuilder(sentence);
-        Map<Integer, String> beginSegMap = new HashMap<>();
         List<Term> termExactWords = new ArrayList<>();
-        List<String> hatExactWords = new ArrayList<>();
         int shift = 0;
         for (Term word : exactWords) {
             Pattern p = Pattern.compile(word.getSeg());
@@ -172,12 +186,14 @@ public class HanUtils {
                 if (termExactWords.isEmpty()) {
                     termExactWords.add(seg);
                     //  在原句子seg后面加上边界值
-                    stringBuilder.insert(m.end() + shift, Occurrence.getShiftStandardPostion(seg.leftBound, seg.rightBound));  // 因为插值的原因,位置发生偏移
+                    stringBuilder.insert(m.end(), Occurrence.getShiftStandardPostion(seg.leftBound, seg.rightBound));  // 因为插值的原因,位置发生偏移
                     shift = shift + 6;
                 }
                 if (HanUtils.hasNonCommonWithAllAddedResultSet(termExactWords, seg)) {
                     termExactWords.add(seg);
                     //  在原句子seg后面加上边界值
+                    //  确认前边有几个插值
+                    //String  beforeStr =  stringBuilder.substring(0,m.)
                     stringBuilder.insert(m.end() + shift, Occurrence.getShiftStandardPostion(seg.leftBound, seg.rightBound));  // 因为插值的原因,位置发生偏移
                     shift = shift + 6;
                 }

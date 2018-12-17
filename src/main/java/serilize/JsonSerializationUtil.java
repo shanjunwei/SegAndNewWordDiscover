@@ -48,15 +48,15 @@ public class JsonSerializationUtil {
         long t1 = System.currentTimeMillis();
         try {
             segTermMap = JsonSerializationUtil.deserilizableForMapFromFile(Config.segTermMapPath);
-//            if (NovelTest == true) {
-//                Config.maxRE = segTermMap.get("####").getRe();
-//                Config.maxLE = segTermMap.get("####").getLe();
-//                Config.maxMI = segTermMap.get("####").getMi();
-//            } else {
+            if (NovelTest == true) {
+                Config.maxRE = segTermMap.get("####").getRe();
+                Config.maxLE = segTermMap.get("####").getLe();
+                Config.maxMI = segTermMap.get("####").getMi();
+            } else {
                 maxLE = segTermMap.get(MAX_KEY).getLe();
                 maxRE = segTermMap.get(MAX_KEY).getRe();
                 maxMI = segTermMap.get(MAX_KEY).getMi();      // 反序列化统计量
-           // }
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }

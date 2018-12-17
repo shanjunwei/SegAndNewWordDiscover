@@ -1,6 +1,7 @@
 package SegmentTest;
 
 import config.Config;
+import config.Constants;
 import org.apache.commons.lang.StringUtils;
 import seg.Segment;
 import serilize.JsonSerializationUtil;
@@ -19,10 +20,12 @@ import static config.Constants.NovelTest;
 public class SegTest {
     public static void main(String[] args) {
         // Constants.NovelTest = true;
-       // testSingleSentenceSeg(args);
+        //testSingleSentenceSeg(args);
         //testRepeatRegx(args);
         //testCalculationAndSerializationToFile();    //  计算并序列化到文件
-        testDebugByFileLine("H:\\小说\\《冰与火之歌》全集.txt",100);   // debug
+        //testDebugByFileLine("H:\\小说\\《冰与火之歌》全集.txt",100);   // debug
+        testDebugByFileLine(Config.ErrorSegPath,600);
+        //testAllChineseSeg(args);
     }
 
     /**
@@ -38,6 +41,22 @@ public class SegTest {
         DEBUG_MODE = true;
         List<String> result = segment.segment(test_text);
         System.out.println("\n*************************分词结果集" + result + "*************************\n");
+    }
+
+
+    /**
+     * 测试纯汉字分词
+     */
+    public static void testAllChineseSeg(String[] args) {
+        if (args.length < 1) System.exit(0);
+        String test_text = args[0];     // 测试文本通过标准输入传入
+        if (StringUtils.isBlank(test_text)) System.exit(0);
+        //  将信息熵 互信息等统计量加入到过滤决策机制中
+        Segment segment = new Segment();
+        //NovelTest = true;
+        DEBUG_MODE = true;
+
+        System.out.println("\n*************************分词结果集->" + segment.segmentWithAllChinese(test_text) + "<-*************************\n");
     }
 
     /**
