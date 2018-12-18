@@ -17,12 +17,14 @@ public class Occurrence {
     /**
      * 全部 切分 数量
      */
-    float totalTerm;
+    long totalTerm;
 
     /**
      * 切分段 去重后频数累计和
      */
-    static float totalCount;
+    static long totalCount;
+
+
     public Occurrence() {
     }
 
@@ -40,19 +42,17 @@ public class Occurrence {
             trieLeft.put(HanUtils.reverseString(seg), wcMap.get(seg));  // 左前缀字典树
             totalCount = totalCount + wcMap.get(seg);    // 计算总词频
         }
+        System.out.println("总词频-----》"+totalCount);
         for (String seg : wcMap.keySet()) {
             // 1. 计算信息熵
             float rightEntropy = computeRightEntropy(seg);
-            RElist.add(rightEntropy);
             //totalRE = totalRE + rightEntropy;
             maxRE = Math.max(maxRE, rightEntropy);  // 求最大右信息熵
             float leftEntropy = computeLeftEntropy(seg);
-            LElist.add(leftEntropy);
             // totalLE = totalLE + leftEntropy;
             maxLE = Math.max(maxLE, rightEntropy);  // 求最大左信息熵
             // 2. 计算互信息
             float mi = computeMutualInformation(seg);
-            MI_list.add(mi);
             //totalMI = totalMI + mi;
             maxMI = Math.max(maxMI, mi);   // 计算最大互信息
             Term term = new Term(seg, wcMap.get(seg), mi, leftEntropy, rightEntropy);
@@ -127,11 +127,12 @@ public class Occurrence {
      * 计算互信息
      */
     private float computeMI(String co_occurrence, String x, String y) {
-        float p_xy = (float) Math.max(MIN_PROBABILITY, wcMap.get(co_occurrence) / totalCount);
+        //System.out.println(co_occurrence +" 的词频->"+wcMap.get(co_occurrence) +" 总词频:->"+ totalCount);
+        double p_xy =  Math.max(MIN_PROBABILITY, (double)wcMap.get(co_occurrence) /(double) totalCount);
         int x_count = x.length() == 1 ? singWordCountMap.get(x) : wcMap.get(x);
-        float p_x = (float) Math.max(MIN_PROBABILITY, x_count / totalCount);
+        double p_x =  Math.max(MIN_PROBABILITY,(double) x_count /(double) totalCount);
         int y_count = y.length() == 1 ? singWordCountMap.get(y) : wcMap.get(y);
-        float p_y = (float) Math.max(MIN_PROBABILITY, y_count / totalCount);
+        double p_y =  Math.max(MIN_PROBABILITY,(double) y_count /(double) totalCount);
         return (float) (p_xy * (Math.log(p_xy / (p_x * p_y)) / Math.log(2)) * 1e5);   //return  (Math.log(p_xy / (p_x * p_y)) / Math.log(2)) * 10;
     }
 
@@ -192,7 +193,7 @@ public class Occurrence {
      * 标准化偏移位置插值,目的是为了让插入的值的长度大小固定
      * TODO: 这里假设句子不够长,最长不过100个字
      */
-    public static String getShiftStandardPostion(int left, int right) {
+    public static String getShiftStandardPosition(int left, int right) {
         StringBuilder stringBuilder = new StringBuilder();
         if (left < 10) stringBuilder.append(0);
         stringBuilder.append(left);

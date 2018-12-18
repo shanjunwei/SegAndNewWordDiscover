@@ -5,27 +5,25 @@ import config.Constants;
 import org.apache.commons.lang.StringUtils;
 import seg.Segment;
 import serilize.JsonSerializationUtil;
-
 import java.io.*;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import static config.Constants.DEBUG_MODE;
-import static config.Constants.NovelTest;
 
 /**
  * 分词测试类
  */
 public class SegTest {
     public static void main(String[] args) {
-        // Constants.NovelTest = true;
+        //Constants.NovelTest = true;
         //testSingleSentenceSeg(args);
         //testRepeatRegx(args);
         //testCalculationAndSerializationToFile();    //  计算并序列化到文件
         //testDebugByFileLine("H:\\小说\\《冰与火之歌》全集.txt",100);   // debug
-        testDebugByFileLine(Config.ErrorSegPath,600);
+        //testDebugByFileLine(Config.ErrorSegPath,600);
         //testAllChineseSeg(args);
+        testCalculationAndSerializationToFile();    // 重新序列化计算结果到文件
     }
 
     /**
@@ -101,8 +99,9 @@ public class SegTest {
      * 测试 整个文本库计算并序列化计算结果到文件
      */
     public static void testCalculationAndSerializationToFile() {
-        NovelTest = true;
-        Config.NovelPath = "H:\\小说\\《冰与火之歌》全集.txt";
+//        Constants.NovelTest = true;
+//        Config.NovelPath = "D:\\HanLP\\novel\\天龙八部.txt";
+//        Config.segTermMapPath = "data\\mytest.txt";
         JsonSerializationUtil.serilizableStatisticsToFile();
     }
 }

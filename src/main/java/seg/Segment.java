@@ -32,7 +32,7 @@ public class Segment {
         if (StringUtils.isBlank(text)) return null;
         long t1 = System.currentTimeMillis();
         String segResult = segmentToString(text);
-        System.out.println("分词耗时: " + (System.currentTimeMillis() - t1) + "  ms");
+        if (DEBUG_MODE) System.out.println("分词耗时: " + (System.currentTimeMillis() - t1) + "  ms");
         return Arrays.asList(segResult.split(" "));
     }
 
@@ -40,18 +40,25 @@ public class Segment {
      * 暴露给外部调用的分词接口 TODO*****
      */
     public String segmentToString(String text) {
+        if ("向人民日报的读者祝贺新年".equals(text)) {
+            DEBUG_MODE = true;
+        }
+
         StringBuilder stringBuilder = new StringBuilder();
         // 1. 以非中文分割，但是结尾数组中保留原来的非中文,目的是保留他们的位置
         String[] array = HanUtils.splitWithNonChineseChar(text);
         for (String str : array) {
-            if (HanUtils.isChineseCharacter(str)) {
-                stringBuilder.append(segmentWithAllChinese(str));
+            if (HanUtils.isChineseCha(str.charAt(0))) {
+                stringBuilder.append(" " + segmentWithAllChinese(str) + " ");
             } else {
-                stringBuilder.append(str);
+                stringBuilder.append(" " + str + " ");
             }
         }
         String result = stringBuilder.toString().trim();
         result = result.replaceAll("\\s{1,}", " ");
+        if (DEBUG_MODE) System.out.println("segmentToString——————————————>" + result);
+
+        DEBUG_MODE = false;
         return result;
     }
 
@@ -65,7 +72,6 @@ public class Segment {
 
         List<Term> termList = HanUtils.segmentToTerm(text, false);
         List<Term> exactWords = new ArrayList<>();
-
         // 词提取
         if (termList == null) {    //  单独一个字的
             exactWords.add(new Term(text, 0, text.length()));
@@ -80,7 +86,7 @@ public class Segment {
     public static void main(String[] args) {
         Constants.NovelTest = true;
         Segment segment = new Segment();
-        segment.segmentWithAllChinese("国家主席孙少平国家主席孙少平");
+        segment.segmentWithAllChinese("国家主席孙少平国家读者主席孙少平");
     }
 
     /**
@@ -180,32 +186,26 @@ public class Segment {
 
     //  第一轮筛选
     private Term getTopCandidateFromSet(List<Term> termList) {
+        // System.out.println("人民:--->"+segTermMap.get("人民").toTotalString());
         if (DEBUG_MODE) System.out.println("   第一轮筛选前->   " + termList + "\n");
         List<Term> result = new ArrayList<>();
         Occurrence occurrence = new Occurrence();
-        if (termList.size() == 1) {    // 一个的也计算统计量
-            Term seg = termList.get(0);
-            Term term = segTermMap.get(seg);
-            float score = occurrence.getNormalizedScore(term);
-            if (term == null) {
-                Term term1 = new Term();
-                term1.setScore(score);
-                segTermMap.put(seg.getSeg(), term1);
-            } else {
-                term.setScore(score);   // 赋值
-            }
-            return termList.get(0);
-        }
         // 计算候选词的 互信息 和 信息熵
         for (Term seg : termList) {
-            Term term = segTermMap.get(seg.getSeg());
+            if (DEBUG_MODE && segTermMap.containsKey("人民")) {
+                System.out.println("------------------------------>segTermMap里存在人民！！！！！" + segTermMap.get("人民").toTotalString());
+            }
+            if (DEBUG_MODE) System.out.println("Term seg" + seg.toTotalString());
+            Term term = segTermMap.get(seg.seg);
+            if (DEBUG_MODE) System.out.println("取出来的term值" + term.toTotalString());
             if (term != null) {
                 // 信息熵过滤
                 if (occurrence.EntropyFilter(term.le, term.re)) { // 过滤掉信息熵过滤明显不是词的
                     if (DEBUG_MODE)
                         System.out.println("信息熵过滤-> " + seg + "   mi->   " + term.mi + " le->" + term.le + " re->" + term.re);
                     term.setScore(0);
-                }  // 互信息过滤
+                }
+                // 互信息过滤
                 else if (occurrence.MutualInformationFilter(term.mi)) {
                     if (DEBUG_MODE)
                         System.out.println("互信息过滤-> " + seg + "   mi->   " + term.mi + " le->" + term.le + " re->" + term.re);
@@ -220,8 +220,22 @@ public class Segment {
         // 对候选集根据 归一化得分 降序排列
         result.sort((o1, o2) -> Double.compare(segTermMap.get(o2.getSeg()).score, segTermMap.get(o1.getSeg()).score));
         if (DEBUG_MODE) System.out.println("   第一轮排序后*****->   " + result + "\n");
-        //System.out.println("   第一轮筛选结果->   " + termList.get(0) + "\n");
         return result.size() == 0 ? null : result.get(0);
     }
 
 }
+
+
+ /*       if (termList.size() == 1 && termList.get(0).getSeg().length() == 1) {    // 一个的也计算统计量
+            Term seg = termList.get(0);
+            Term term = segTermMap.get(seg);
+            float score = occurrence.getNormalizedScore(term);
+            if (term == null) {
+                Term term1 = new Term();
+                term1.setScore(score);
+                segTermMap.put(seg.getSeg(), term1);
+            } else {
+                term.setScore(score);   // 赋值
+            }
+            return termList.get(0);
+        }*/

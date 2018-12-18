@@ -128,9 +128,20 @@ public class Term implements Serializable {
     public void setRightBound(int rightBound) {
         this.rightBound = rightBound;
     }
-
     @Override
     public String toString() {
         return seg;
+    }
+    public String toTotalString() {
+        return "Term{" +
+                "seg='" + seg + '\'' +
+                ", count=" + count +
+                ", leftBound=" + leftBound +
+                ", rightBound=" + rightBound +
+                ", mi=" + mi +
+                ", le=" + le +
+                ", re=" + re +
+                ", score=" + score +
+                '}';
     }
 }

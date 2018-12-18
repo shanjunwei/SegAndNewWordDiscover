@@ -25,7 +25,13 @@ public class PreProcess {
             String str = null;
             while ((str = br.readLine()) != null) {
                 if (StringUtils.isNotBlank(str)) {
-                    HanUtils.FMMSegment(str, true);   // FMM算法切分候选词并统计词频
+                    String[] replaceNonChinese = HanUtils.replaceNonChineseCharacterAsBlank(str);
+                    for (int i = 0; i < replaceNonChinese.length; i++) {
+                        String textDS = replaceNonChinese[i];
+                        if (StringUtils.isNotBlank(textDS)) {
+                            HanUtils.FMMSegment(textDS, true);
+                        }
+                    }
                 }
             }
             br.close();
@@ -36,7 +42,6 @@ public class PreProcess {
             e.printStackTrace();
         }
     }
-
 
     public void initNovel() {   // 数据预处理,针对人民日报语料做一些修改
         // 读取小说文本
@@ -50,7 +55,6 @@ public class PreProcess {
             }
         }
     }
-
 
     // 去掉停用词，去掉停用词从低到高
     private String[] segmentByStopWordsAes(String text) {
@@ -83,30 +87,3 @@ public class PreProcess {
         return seg_stop_result;
     }
 }
-
-
-
-   /* public void initData2() {   // 数据预处理
-        // 读取小说文本
-        novel_text = FileUtils.readFileToString(Config.NovelPath);
-        String[] replaceNonChinese = HanUtils.replaceNonChineseCharacterAsBlank(novel_text);  // 去掉非中文字符   里边没有逗号
-        // 再拆分停用词
-        System.out.println("去非中文后的字符串数量" + replaceNonChinese.length + "   ");
-        for (int i = 0; i < replaceNonChinese.length; i++) {
-            String textDS = replaceNonChinese[i];   // 这里没有逗号
-            if (StringUtils.isNotBlank(textDS) && textDS.length() != 1) {
-                //String[] withoutStopWords = HanUtils.segmentByStopWordsDes(textDS);   // 将以非中文字符分割后的结果再以停用词分割
-                // for (int j = 0; j < withoutStopWords.length; j++) {
-                // String text = withoutStopWords[j];
-                String text = textDS;
-                if (StringUtils.isNotBlank(text) && text.length() != 1) {
-                    LinkedHashSet<String> termList = HanUtils.segment(text, true);
-                    if (termList != null) {
-                        seg_result.addAll(termList);
-                    }
-                }
-            }
-        }
-        System.out.println("切分字串的个数" + seg_result.size());
-        System.out.println();
-    }*/

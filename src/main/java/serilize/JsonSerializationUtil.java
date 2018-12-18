@@ -17,7 +17,7 @@ import static config.Constants.segTermMap;
 public class JsonSerializationUtil {
     private static Gson gson = new Gson();
     /**
-     *   序列化计算结果到文件中,只要调用一次
+     *   序列化计算结果到文件中,只要调用一次  测试完成,数据量对上了
      *   数据预处理  计算 序列化全部在里面做了
      */
     public static void serilizableStatisticsToFile() {
@@ -29,7 +29,7 @@ public class JsonSerializationUtil {
         }
         Occurrence occurrence = new Occurrence();
         occurrence.addAllSegAndCompute(wcMap);   // 计算统计量
-
+        wcMap.clear();
         // Term term = new Term("####", 0, totalMI, totalLE, totalRE);
         Term term = new Term(MAX_KEY, 0, maxMI, maxLE, maxRE);
         segTermMap.put(MAX_KEY, term);

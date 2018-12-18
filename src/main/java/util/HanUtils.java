@@ -11,6 +11,7 @@ import net.sourceforge.pinyin4j.format.exception.BadHanyuPinyinOutputFormatCombi
 import org.apache.commons.lang.StringUtils;
 import pojo.Term;
 
+import javax.management.StringValueExp;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -32,6 +33,18 @@ public class HanUtils {
         Pattern pattern = Pattern.compile(regEx);
         // 忽略大小写的写法
         Matcher matcher = pattern.matcher(text);
+        return matcher.matches();  // 字符串是否与正则表达式相匹配
+    }
+
+
+    // 识别非中文符号  包括英文，标点，数学运算符
+    public static boolean isChineseCha(char cha) {   // 可以识别繁体字
+        // 中文验证规则
+        String regEx = "[\\u4e00-\\u9fa5]";
+        // 编译正则表达式
+        Pattern pattern = Pattern.compile(regEx);
+        // 忽略大小写的写法
+        Matcher matcher = pattern.matcher(String.valueOf(cha));
         return matcher.matches();  // 字符串是否与正则表达式相匹配
     }
 
@@ -186,7 +199,7 @@ public class HanUtils {
                 if (termExactWords.isEmpty()) {
                     termExactWords.add(seg);
                     //  在原句子seg后面加上边界值
-                    stringBuilder.insert(m.end(), Occurrence.getShiftStandardPostion(seg.leftBound, seg.rightBound));  // 因为插值的原因,位置发生偏移
+                    stringBuilder.insert(m.end(), Occurrence.getShiftStandardPosition(seg.leftBound, seg.rightBound));  // 因为插值的原因,位置发生偏移
                     shift = shift + 6;
                 }
                 if (HanUtils.hasNonCommonWithAllAddedResultSet(termExactWords, seg)) {
@@ -194,7 +207,7 @@ public class HanUtils {
                     //  在原句子seg后面加上边界值
                     //  确认前边有几个插值
                     //String  beforeStr =  stringBuilder.substring(0,m.)
-                    stringBuilder.insert(m.end() + shift, Occurrence.getShiftStandardPostion(seg.leftBound, seg.rightBound));  // 因为插值的原因,位置发生偏移
+                    stringBuilder.insert(m.end() + shift, Occurrence.getShiftStandardPosition(seg.leftBound, seg.rightBound));  // 因为插值的原因,位置发生偏移
                     shift = shift + 6;
                 }
             }
@@ -204,7 +217,7 @@ public class HanUtils {
 
         sentence = stringBuilder.toString();
         for (Term word : termExactWords) {
-            String hatWord = word.getSeg() + Occurrence.getShiftStandardPostion(word.leftBound, word.rightBound);  // 带边界的词
+            String hatWord = word.getSeg() + Occurrence.getShiftStandardPosition(word.leftBound, word.rightBound);  // 带边界的词
             System.out.println("单边街的词---》" + hatWord);
             sentence = sentence.replaceAll(hatWord, " " + word.getSeg() + " ");    // 这样做有一定隐患 比如 5 25 ;孙少平 少平
         }
@@ -220,13 +233,13 @@ public class HanUtils {
         StringBuilder stringBuilder = new StringBuilder(sentence);
         int shift = 0;  // 偏移量
         for (Term term : exactWords) {
-            stringBuilder.insert(term.rightBound + shift, Occurrence.getShiftStandardPostion(term.leftBound, term.rightBound));  // 因为插值的原因,位置发生偏移
+            stringBuilder.insert(term.rightBound + shift, Occurrence.getShiftStandardPosition(term.leftBound, term.rightBound));  // 因为插值的原因,位置发生偏移
             shift = shift + 6;
         }
         //System.out.println("插值后stringBuilder__> "+stringBuilder.toString());
         sentence = stringBuilder.toString();
         for (Term word : exactWords) {
-            String hatWord = word.getSeg() + Occurrence.getShiftStandardPostion(word.leftBound, word.rightBound);  // 带边界的词
+            String hatWord = word.getSeg() + Occurrence.getShiftStandardPosition(word.leftBound, word.rightBound);  // 带边界的词
             //System.out.println("单边街的词---》"+hatWord);
             sentence = sentence.replaceAll(hatWord, " " + word.getSeg() + " ");    // 这样做有一定隐患 比如 5 25 ;孙少平 少平
         }
