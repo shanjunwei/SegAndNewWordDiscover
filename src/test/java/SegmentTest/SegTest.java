@@ -21,9 +21,9 @@ public class SegTest {
         //testRepeatRegx(args);
         //testCalculationAndSerializationToFile();    //  计算并序列化到文件
         //testDebugByFileLine("H:\\小说\\《冰与火之歌》全集.txt",100);   // debug
-        //testDebugByFileLine(Config.ErrorSegPath,600);
+        testDebugByFileLine(Config.ErrorSegPath,600);
         //testAllChineseSeg(args);
-        testCalculationAndSerializationToFile();    // 重新序列化计算结果到文件
+        //testCalculationAndSerializationToFile();    // 重新序列化计算结果到文件
     }
 
     /**

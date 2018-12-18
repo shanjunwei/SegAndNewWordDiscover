@@ -42,7 +42,7 @@ public class Occurrence {
             trieLeft.put(HanUtils.reverseString(seg), wcMap.get(seg));  // 左前缀字典树
             totalCount = totalCount + wcMap.get(seg);    // 计算总词频
         }
-        System.out.println("总词频-----》"+totalCount);
+        System.out.println("总词频-----》" + totalCount);
         for (String seg : wcMap.keySet()) {
             // 1. 计算信息熵
             float rightEntropy = computeRightEntropy(seg);
@@ -128,11 +128,11 @@ public class Occurrence {
      */
     private float computeMI(String co_occurrence, String x, String y) {
         //System.out.println(co_occurrence +" 的词频->"+wcMap.get(co_occurrence) +" 总词频:->"+ totalCount);
-        double p_xy =  Math.max(MIN_PROBABILITY, (double)wcMap.get(co_occurrence) /(double) totalCount);
+        double p_xy = Math.max(MIN_PROBABILITY, (double) wcMap.get(co_occurrence) / (double) totalCount);
         int x_count = x.length() == 1 ? singWordCountMap.get(x) : wcMap.get(x);
-        double p_x =  Math.max(MIN_PROBABILITY,(double) x_count /(double) totalCount);
+        double p_x = Math.max(MIN_PROBABILITY, (double) x_count / (double) totalCount);
         int y_count = y.length() == 1 ? singWordCountMap.get(y) : wcMap.get(y);
-        double p_y =  Math.max(MIN_PROBABILITY,(double) y_count /(double) totalCount);
+        double p_y = Math.max(MIN_PROBABILITY, (double) y_count / (double) totalCount);
         return (float) (p_xy * (Math.log(p_xy / (p_x * p_y)) / Math.log(2)) * 1e5);   //return  (Math.log(p_xy / (p_x * p_y)) / Math.log(2)) * 10;
     }
 
@@ -143,11 +143,15 @@ public class Occurrence {
         if (term == null) {
             return 0f;
         }
+
+        if (DEBUG_MODE)
+            System.out.println("   maxMI->   " + maxMI + "maxLE->" + maxLE + " maxRE->" + maxRE);
+
         // Term term = segTermMap.get(seg);
         //term.score = term.mi / totalMI + term.le / totalLE + term.re / totalRE;   // 归一化
         //term.score = term.mi / totalMI + Math.min(term.le / totalLE, term.re / totalRE);   // 01更换归一化策略 -> 取左右熵最小值
         // 用log 函数进行归一化,参考 http://www.cnblogs.com/pejsidney/p/8031250.html
-        float normalizedMi = (float) (Math.log(term.mi) / Math.log(maxMI))*2;  // 归一化信息熵
+        float normalizedMi = (float) (Math.log(term.mi) / Math.log(maxMI)) * 2;  // 归一化信息熵
         float normalizedEntropy = (float) (Math.log(Math.min(term.le, term.re)) / Math.log(term.le < term.re ? maxLE : maxRE));  // 归一化左右熵
         term.score = normalizedMi + normalizedEntropy + getEntropyRate(term.le, term.re);          // 加入左右熵紧密程度的度量
         if (DEBUG_MODE)

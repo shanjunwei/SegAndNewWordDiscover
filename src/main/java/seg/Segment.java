@@ -40,10 +40,6 @@ public class Segment {
      * 暴露给外部调用的分词接口 TODO*****
      */
     public String segmentToString(String text) {
-        if ("向人民日报的读者祝贺新年".equals(text)) {
-            DEBUG_MODE = true;
-        }
-
         StringBuilder stringBuilder = new StringBuilder();
         // 1. 以非中文分割，但是结尾数组中保留原来的非中文,目的是保留他们的位置
         String[] array = HanUtils.splitWithNonChineseChar(text);
@@ -57,8 +53,6 @@ public class Segment {
         String result = stringBuilder.toString().trim();
         result = result.replaceAll("\\s{1,}", " ");
         if (DEBUG_MODE) System.out.println("segmentToString——————————————>" + result);
-
-        DEBUG_MODE = false;
         return result;
     }
 
@@ -186,18 +180,12 @@ public class Segment {
 
     //  第一轮筛选
     private Term getTopCandidateFromSet(List<Term> termList) {
-        // System.out.println("人民:--->"+segTermMap.get("人民").toTotalString());
         if (DEBUG_MODE) System.out.println("   第一轮筛选前->   " + termList + "\n");
         List<Term> result = new ArrayList<>();
         Occurrence occurrence = new Occurrence();
         // 计算候选词的 互信息 和 信息熵
         for (Term seg : termList) {
-            if (DEBUG_MODE && segTermMap.containsKey("人民")) {
-                System.out.println("------------------------------>segTermMap里存在人民！！！！！" + segTermMap.get("人民").toTotalString());
-            }
-            if (DEBUG_MODE) System.out.println("Term seg" + seg.toTotalString());
             Term term = segTermMap.get(seg.seg);
-            if (DEBUG_MODE) System.out.println("取出来的term值" + term.toTotalString());
             if (term != null) {
                 // 信息熵过滤
                 if (occurrence.EntropyFilter(term.le, term.re)) { // 过滤掉信息熵过滤明显不是词的
