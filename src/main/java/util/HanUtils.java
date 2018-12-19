@@ -104,7 +104,7 @@ public class HanUtils {
         return result;
     }
 
-    // 将非中文字符  以及中文停用词  以空格替代
+    // 将非中文字符  以空格替代
     public static String[] replaceNonChineseCharacterAsBlank(String text) {
         StringBuilder stringBuilder = new StringBuilder();
         char[] chars = text.toCharArray();
@@ -112,11 +112,12 @@ public class HanUtils {
             if (HanUtils.isChineseCharacter(String.valueOf(chars[i]))) {
                 stringBuilder.append(chars[i]);
             } else {
-                stringBuilder.append(",");
+                stringBuilder.append(" ");
             }
         }
-        String temp = stringBuilder.toString().replaceAll("[,]+", ",");  // 对多个非分词字符进行合并处理
-        String[] seg_nonChinese_result = temp.split(",");
+        String temp = stringBuilder.toString().replaceAll("\\s{1,}", " ");
+        temp =  temp.trim();    // 去首尾空格
+        String[] seg_nonChinese_result = temp.split(" ");
         return seg_nonChinese_result;
     }
 
@@ -361,7 +362,7 @@ public class HanUtils {
     }
 
 
-    // 切分词  FMM 算法
+    // 切分词  FMM 算法 ,不取一个字的候选串
     public static List<Term> segmentToTerm(String text, boolean countWordFrequency) {
         //  送进来的切先以停用词切分
         List<Term> termList = new ArrayList<>();

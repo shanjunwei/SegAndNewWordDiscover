@@ -21,9 +21,10 @@ public class SegTest {
         //testRepeatRegx(args);
         //testCalculationAndSerializationToFile();    //  计算并序列化到文件
         //testDebugByFileLine("H:\\小说\\《冰与火之歌》全集.txt",100);   // debug
-        testDebugByFileLine(Config.ErrorSegPath,600);
+        //testDebugByFileLine(Config.ErrorSegPath,600);
         //testAllChineseSeg(args);
         //testCalculationAndSerializationToFile();    // 重新序列化计算结果到文件
+        testExtractWords(args);   // 测试抽词
     }
 
     /**
@@ -103,5 +104,16 @@ public class SegTest {
 //        Config.NovelPath = "D:\\HanLP\\novel\\天龙八部.txt";
 //        Config.segTermMapPath = "data\\mytest.txt";
         JsonSerializationUtil.serilizableStatisticsToFile();
+    }
+
+
+    /**
+     * 测试抽词
+     */
+    public static void testExtractWords(String[] args) {
+        Constants.NovelTest = true;
+        //Constants.DEBUG_MODE = true;
+        Segment segment = new Segment();
+        System.out.println("抽词结果----->"+segment.extractWords(args[0])+"<---");
     }
 }

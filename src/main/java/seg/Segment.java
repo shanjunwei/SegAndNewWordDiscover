@@ -56,6 +56,31 @@ public class Segment {
         return result;
     }
 
+
+    /**
+     * 暴露给外部调用的 抽词 接口 TODO*****
+     * 传进来的是一句话,里面可能包含非中文字符
+     */
+    public String extractWords(String text) {
+        if (StringUtils.isBlank(text)) return text;
+        // 将字符串以非中文字符切割成片段
+        String[] array = HanUtils.replaceNonChineseCharacterAsBlank(text);
+
+        StringBuilder exactWords = new StringBuilder();
+        for (String str : array) {
+            if (str.length() == 1) {     // 落单的一个字单独成词,候选不包含一个字的
+                exactWords.append(" " + str);
+            } else {
+                List<Term> termList = HanUtils.segmentToTerm(str, false);
+                List<Term> result = extractWordsFromNGram(termList);
+                for(Term  term: result){
+                    exactWords.append(" "+term);
+                }
+            }
+        }
+        return exactWords.toString().trim();
+    }
+
     /**
      * //TODO  年份识别
      * 暴露给外部调用的分词接口
