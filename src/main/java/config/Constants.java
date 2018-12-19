@@ -24,7 +24,7 @@ public class Constants {
 
     public static Map<String, Integer> singWordCountMap = new ConcurrentHashMap<>();   // 单字词频
 
-    public static Map<String, Term> segTermMap = new HashMap<>(1000000);   //用于统计量归一化计算
+    public static Map<String, Term> segTermMap = new HashMap<>(1000000);   //用于统计量归一化计算,占用内存空间太大，准备弃用
 
 /*    public static final List<Float> LElist = new ArrayList<>();   //左熵
     public static final List<Float> RElist = new ArrayList<>();   //右熵
@@ -35,9 +35,15 @@ public class Constants {
      */
     public static BinTrie<Integer> trieLeft = new BinTrie<>();
     /**
-     * 字典树,用于右前缀查询
+     * 字典树,用于右前缀查询，也可以用于序列化计算结果
      */
-    public static BinTrie<Integer> trieRight = new BinTrie<>();
+    public static BinTrie<Term> trieRight = new BinTrie<>();
+
+    /**
+     * 字典树,用于序列化计算结果
+     */
+//    public static BinTrie<Integer> trieRight = new BinTrie<>();
+
     static {
        // initStopWords();
     }

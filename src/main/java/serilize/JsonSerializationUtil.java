@@ -7,8 +7,9 @@ import config.Config;
 import pojo.Term;
 import seg.PreProcess;
 
-import java.io.IOException;
+import java.io.*;
 import java.util.HashMap;
+import java.util.Map;
 
 import static config.Config.*;
 import static config.Constants.*;
@@ -16,9 +17,10 @@ import static config.Constants.segTermMap;
 
 public class JsonSerializationUtil {
     private static Gson gson = new Gson();
+
     /**
-     *   序列化计算结果到文件中,只要调用一次  测试完成,数据量对上了
-     *   数据预处理  计算 序列化全部在里面做了
+     * 序列化计算结果到文件中,只要调用一次  测试完成,数据量对上了
+     * 数据预处理  计算 序列化全部在里面做了
      */
     public static void serilizableStatisticsToFile() {
         PreProcess preProcess = new PreProcess();
@@ -34,11 +36,41 @@ public class JsonSerializationUtil {
         Term term = new Term(MAX_KEY, 0, maxMI, maxLE, maxRE);
         segTermMap.put(MAX_KEY, term);
         try {
-            JsonSerializationUtil.serilizableForMap(segTermMap, Config.segTermMapPath);
+            JsonSerializationUtil.serilizableForMap2(segTermMap, Config.segTermMapPath);
         } catch (IOException e) {
             e.printStackTrace();
         }
         System.exit(0);
+    }
+
+    /**
+     * 序列化字典树
+     * 数据预处理  计算 序列化全部在里面做了
+     */
+    public static void serializateTrieToFile() {
+        PreProcess preProcess = new PreProcess();
+        if (NovelTest) {
+            preProcess.initNovel();
+        } else {
+            preProcess.initData();
+        }
+        Occurrence occurrence = new Occurrence();
+        occurrence.addAllSegAndCompute(wcMap);   // 计算统计量
+        System.out.println("保存字典树的容量->" + trieRight.size());
+        trieRight.save(trailSerailPath);   //  通过序列化字典树保存结果
+        System.exit(0);
+    }
+
+    /**
+     * 反序列化字典树到内存
+     */
+    public static void loadTrieFromFile() {
+        long t1 = System.currentTimeMillis();
+        trieRight.load(trailSerailPath, new Term[100]);
+
+        System.out.println("保存字典树的容量->" + trieRight.size());
+        System.out.println("取出一条检查: 人民->" + trieRight.get("人民").toTotalString());
+        System.out.println("反序列化文件到内存耗时:  " + (System.currentTimeMillis() - t1) + " ms");
     }
 
     /**
@@ -80,6 +112,20 @@ public class JsonSerializationUtil {
         readAndWriteJson.writeFile(OutfilePathName, listString);
         return listString;
     }
+
+    /* 分开序列化 */
+    public static void serilizableForMap2(Map<String, Term> objMap, String OutfilePathName)
+            throws IOException {
+        try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(OutfilePathName), "utf-8"))) {
+            //writer.write("{");
+            for (Map.Entry<String, Term> entry : objMap.entrySet()) {
+                Gson gson = new Gson();
+                String json = gson.toJson(entry);
+                writer.write(json);
+            }
+        }
+    }
+
 
 
 

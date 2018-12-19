@@ -23,8 +23,9 @@ public class SegTest {
         //testDebugByFileLine("H:\\小说\\《冰与火之歌》全集.txt",100);   // debug
         //testDebugByFileLine(Config.ErrorSegPath,600);
         //testAllChineseSeg(args);
-        //testCalculationAndSerializationToFile();    // 重新序列化计算结果到文件
-        testExtractWords(args);   // 测试抽词
+        testCalculationAndSerializationToFile();    // 重新序列化计算结果到文件
+        //testExtractWords(args);   // 测试抽词
+        //testSerializateTrieToFile();
     }
 
     /**
@@ -100,10 +101,20 @@ public class SegTest {
      * 测试 整个文本库计算并序列化计算结果到文件
      */
     public static void testCalculationAndSerializationToFile() {
+        Constants.NovelTest = true;
+        Config.NovelPath = "D:\\HanLP\\novel\\天龙八部.txt";
+        Config.segTermMapPath = "data\\mytest.txt";
+        JsonSerializationUtil.serilizableStatisticsToFile();
+    }
+
+    /**
+     * 测试 序列化字典树,hashMap 序列化占用的空间太大
+     */
+    public static void testSerializateTrieToFile() {
 //        Constants.NovelTest = true;
 //        Config.NovelPath = "D:\\HanLP\\novel\\天龙八部.txt";
 //        Config.segTermMapPath = "data\\mytest.txt";
-        JsonSerializationUtil.serilizableStatisticsToFile();
+        JsonSerializationUtil.serializateTrieToFile();
     }
 
 

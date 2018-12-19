@@ -1,5 +1,6 @@
 package computer;
 
+import org.omg.CORBA.INTERNAL;
 import pojo.Term;
 import util.HanUtils;
 
@@ -9,6 +10,7 @@ import java.util.Set;
 
 import static config.Config.*;
 import static config.Constants.*;
+import static config.Constants.wcMap;
 
 /**
  * 词共现 统计量计算,包括 互信息,左右熵
@@ -38,7 +40,8 @@ public class Occurrence {
 
         totalTerm = wcMap.size();
         for (String seg : wcMap.keySet()) {
-            trieRight.put(seg, wcMap.get(seg));     // 右前缀字典树
+            Term term = new Term(seg, wcMap.get(seg));
+            trieRight.put(seg, term);     // 右前缀字典树
             trieLeft.put(HanUtils.reverseString(seg), wcMap.get(seg));  // 左前缀字典树
             totalCount = totalCount + wcMap.get(seg);    // 计算总词频
         }
@@ -57,6 +60,7 @@ public class Occurrence {
             maxMI = Math.max(maxMI, mi);   // 计算最大互信息
             Term term = new Term(seg, wcMap.get(seg), mi, leftEntropy, rightEntropy);
             segTermMap.put(seg, term);
+            trieRight.put(seg,term);
             count++;
             if (count % 100000 == 0) {
                 System.out.print("*");
@@ -82,8 +86,8 @@ public class Occurrence {
      * 计算右邻熵
      */
     public float computeRightEntropy(String prefix) {
-        Set<Map.Entry<String, Integer>> entrySet = trieRight.prefixSearch(prefix);
-        return computeEntropy(entrySet, prefix);
+        Set<Map.Entry<String, Term>> entrySet = trieRight.prefixSearch(prefix);
+        return computeEntropy2(entrySet, prefix);
     }
 
 
@@ -104,6 +108,28 @@ public class Occurrence {
                 continue;
             }
             float p = entry.getValue() / totalFrequency;
+            le += -p * Math.log(p);
+        }
+        return le;
+    }
+
+    /**
+     * 信息熵计算
+     */
+    private float computeEntropy2(Set<Map.Entry<String, Term>> entrySet, String prefix) {
+        float totalFrequency = 0;
+        for (Map.Entry<String, Term> entry : entrySet) {
+            if (entry.getKey().length() != prefix.length() + 1) {
+                continue;
+            }
+            totalFrequency += entry.getValue().getCount();
+        }
+        float le = 0;
+        for (Map.Entry<String, Term> entry : entrySet) {
+            if (entry.getKey().length() != prefix.length() + 1) {
+                continue;
+            }
+            float p = entry.getValue().getCount() / totalFrequency;
             le += -p * Math.log(p);
         }
         return le;

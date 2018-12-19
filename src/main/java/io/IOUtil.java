@@ -78,9 +78,6 @@ public class IOUtil {
     public static String readTxt(String path) {
         if (path == null) return null;
         try {
-//            InputStream in = IOAdapter == null ? new FileInputStream(path) :
-//                    IOAdapter.open(path);
-
             InputStream in = new FileInputStream(path);
 
             byte[] fileContent = new byte[in.available()];
@@ -147,24 +144,19 @@ public class IOUtil {
      * @param path
      * @return
      */
-/*    public static byte[] readBytes(String path) {
-        try {
-            // if (IOAdapter == null) return readBytesFromFileInputStream(new FileInputStream(path));
-
-            InputStream is = IOAdapter.open(path);
-            if (is instanceof FileInputStream)
-                return readBytesFromFileInputStream((FileInputStream) is);
-            else
-                return readBytesFromOtherInputStream(is);
-        } catch (Exception e) {
-            logger.warning("读取" + path + "时发生异常" + e);
+    public static byte[] readBytes(String path) {
+        {
+            try {
+                return readBytesFromFileInputStream(new FileInputStream(path));
+            } catch (Exception e) {
+                logger.warning("读取" + path + "时发生异常" + e);
+            }
+            return null;
         }
+    }
 
-        return null;
-    }*/
-
-/*    public static String readTxt(String file, String charsetName) throws IOException {
-        InputStream is = IOAdapter.open(file);
+    public static String readTxt(String file, String charsetName) throws IOException {
+        InputStream is = new FileInputStream(file);
         byte[] targetArray = new byte[is.available()];
         int len;
         int off = 0;
@@ -174,7 +166,7 @@ public class IOUtil {
         is.close();
 
         return new String(targetArray, charsetName);
-    }*/
+    }
 
     public static String baseName(String path) {
         if (path == null || path.length() == 0)
@@ -566,7 +558,7 @@ public class IOUtil {
         bw.write(params[params.length - 1]);
     }
 
-   /* *//**
+    /* *//**
      * 加载词典，词典必须遵守HanLP核心词典格式
      * @param pathArray 词典路径，可以有任意个。每个路径支持用空格表示默认词性，比如“全国地名大全.txt ns”
      * @return 一个储存了词条的map
@@ -597,7 +589,7 @@ public class IOUtil {
         return map;
     }*/
 
-   /* *//**
+    /* *//**
      * 将一个BufferedReader中的词条加载到词典
      * @param br 源
      * @param storage 储存位置

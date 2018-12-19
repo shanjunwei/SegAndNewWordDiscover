@@ -416,7 +416,7 @@ public class BinTrie<V> extends BaseNode<V> implements ITrie<V>, Externalizable
      * @param value 额外提供的值数组，按照值的字典序。（之所以要求提供它，是因为泛型的保存不归树管理）
      * @return 是否成功
      */
-/*    public boolean load(String path, V[] value)
+    public boolean load(String path, V[] value)
     {
         byte[] bytes = IOUtil.readBytes(path);
         if (bytes == null) return false;
@@ -434,7 +434,7 @@ public class BinTrie<V> extends BaseNode<V> implements ITrie<V>, Externalizable
         size = value.length;
 
         return true;
-    }*/
+    }
     public _ValueArray newValueArray()
     {
         return new _ValueArray();

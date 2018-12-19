@@ -21,7 +21,8 @@ public class Segment {
     // 数据预处理先做
     static {
         //JsonSerializationUtil.serilizableStatisticsToFile();    // 序列化计算结果
-        JsonSerializationUtil.deserilizableStatistics();    // 反序列化
+        //JsonSerializationUtil.deserilizableStatistics();    // 反序列化
+        JsonSerializationUtil.loadTrieFromFile();  // 反序列化字典树
     }
 
     /**

@@ -31,6 +31,11 @@ public class Term implements Serializable {
     public Term() {
     }
 
+    public Term(String seg, int count) {
+        this.seg = seg;
+        this.count = count;
+    }
+
     public Term(String seg, int count, float mi, float le, float re) {
         this.seg = seg;
         this.count = count;
