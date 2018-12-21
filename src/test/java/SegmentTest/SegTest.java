@@ -1,14 +1,14 @@
 package SegmentTest;
-
-import config.Config;
 import config.Constants;
 import org.apache.commons.lang.StringUtils;
 import seg.Segment;
 import serilize.JsonSerializationUtil;
+
 import java.io.*;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import static config.Constants.DEBUG_MODE;
 
 /**
@@ -23,7 +23,7 @@ public class SegTest {
         //testDebugByFileLine("H:\\小说\\《冰与火之歌》全集.txt",100);   // debug
         //testDebugByFileLine(Config.ErrorSegPath,600);
         //testAllChineseSeg(args);
-        testCalculationAndSerializationToFile();    // 重新序列化计算结果到文件
+        saveCalculateResultToRedis();    // 重新序列化计算结果到文件
         //testExtractWords(args);   // 测试抽词
         //testSerializateTrieToFile();
     }
@@ -96,25 +96,16 @@ public class SegTest {
             e.printStackTrace();
         }
     }
-
     /**
-     * 测试 整个文本库计算并序列化计算结果到文件
+     * 测试 保存结算结果到redis
      */
-    public static void testCalculationAndSerializationToFile() {
-        Constants.NovelTest = true;
-        Config.NovelPath = "D:\\HanLP\\novel\\天龙八部.txt";
-        Config.segTermMapPath = "data\\mytest.txt";
-        JsonSerializationUtil.serilizableStatisticsToFile();
-    }
+    public static void saveCalculateResultToRedis() {
+        //Constants.NovelTest = true;
+        //Config.NovelPath = "D:\\HanLP\\novel\\天龙八部.txt";
+        JsonSerializationUtil.saveCalculateResultToRedis();
 
-    /**
-     * 测试 序列化字典树,hashMap 序列化占用的空间太大
-     */
-    public static void testSerializateTrieToFile() {
-//        Constants.NovelTest = true;
-//        Config.NovelPath = "D:\\HanLP\\novel\\天龙八部.txt";
-//        Config.segTermMapPath = "data\\mytest.txt";
-        JsonSerializationUtil.serializateTrieToFile();
+
+        //System.out.println(Constants.redis.hgetAll("从此"));
     }
 
 
@@ -123,8 +114,10 @@ public class SegTest {
      */
     public static void testExtractWords(String[] args) {
         Constants.NovelTest = true;
-        //Constants.DEBUG_MODE = true;
+        Constants.DEBUG_MODE = true;
+      //  Constants.redis.
+
         Segment segment = new Segment();
-        System.out.println("抽词结果----->"+segment.extractWords(args[0])+"<---");
+        System.out.println("抽词结果----->" + segment.extractWords(args[0]) + "<---");
     }
 }

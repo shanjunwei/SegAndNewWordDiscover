@@ -17,7 +17,7 @@ public class Config {
     public final static float MIN_LEFT_ENTROPY = 0.01f;   // 最小左熵,用于左邻熵过滤
     public final static float MIN_RIGHT_ENTROPY = 0.01f;   // 最小右熵,用于右邻熵过滤
     public static String NovelPath = "data\\test-text.txt"; // 语料入口
-    public static String segTermMapPath = "data\\segTermMap.txt";   //序列化文件输出路径
+    //public static String segTermMapPath = "data\\segTermMap.txt";   //序列化文件输出路径
     public static String ErrorSegPath = "data/error_seg.txt"; // 切分错误的行记录
     public static final String trailSerailPath = "data/trail_save.txt"; // 切分错误的行记录
 

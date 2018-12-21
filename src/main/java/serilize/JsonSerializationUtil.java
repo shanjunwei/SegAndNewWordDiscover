@@ -3,17 +3,13 @@ package serilize;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import computer.Occurrence;
-import config.Config;
 import pojo.Term;
 import seg.PreProcess;
-
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
-
 import static config.Config.*;
 import static config.Constants.*;
-import static config.Constants.segTermMap;
 
 public class JsonSerializationUtil {
     private static Gson gson = new Gson();
@@ -22,7 +18,7 @@ public class JsonSerializationUtil {
      * 序列化计算结果到文件中,只要调用一次  测试完成,数据量对上了
      * 数据预处理  计算 序列化全部在里面做了
      */
-    public static void serilizableStatisticsToFile() {
+   /* public static void serilizableStatisticsToFile() {
         PreProcess preProcess = new PreProcess();
         if (NovelTest) {
             preProcess.initNovel();
@@ -41,13 +37,13 @@ public class JsonSerializationUtil {
             e.printStackTrace();
         }
         System.exit(0);
-    }
+    }*/
+
 
     /**
-     * 序列化字典树
-     * 数据预处理  计算 序列化全部在里面做了
+     *   将计算结果保存到redis
      */
-    public static void serializateTrieToFile() {
+    public static void saveCalculateResultToRedis() {
         PreProcess preProcess = new PreProcess();
         if (NovelTest) {
             preProcess.initNovel();
@@ -56,8 +52,6 @@ public class JsonSerializationUtil {
         }
         Occurrence occurrence = new Occurrence();
         occurrence.addAllSegAndCompute(wcMap);   // 计算统计量
-        System.out.println("保存字典树的容量->" + trieRight.size());
-        trieRight.save(trailSerailPath);   //  通过序列化字典树保存结果
         System.exit(0);
     }
 
@@ -76,7 +70,7 @@ public class JsonSerializationUtil {
     /**
      * 反序列化统计量到内存
      */
-    public static void deserilizableStatistics() {
+/*    public static void deserilizableStatistics() {
         long t1 = System.currentTimeMillis();
         try {
             segTermMap = JsonSerializationUtil.deserilizableForMapFromFile(Config.segTermMapPath);
@@ -94,7 +88,7 @@ public class JsonSerializationUtil {
         }
         long t2 = System.currentTimeMillis();
         System.out.println("反序列化文件到内存耗时:  " + (t2 - t1) + " ms");
-    }
+    }*/
 
     /* 将json文件中的内容读取出来，反序列化为HashMap */
     public static HashMap<String, Term> deserilizableForMapFromFile(String InputfilePathName) throws IOException {

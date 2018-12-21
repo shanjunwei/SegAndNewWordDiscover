@@ -1,6 +1,10 @@
 package pojo;
 
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
+
+import static config.Constants.*;
 
 /**
  * 存储每个切分 和他们的一些统计信息
@@ -133,10 +137,41 @@ public class Term implements Serializable {
     public void setRightBound(int rightBound) {
         this.rightBound = rightBound;
     }
+
+    /**
+     * Term  转 Map对象
+     */
+    public Map<String, String> convertToMap() {
+        Map<String, String> termMap = new HashMap();
+        termMap.put(SEG, this.seg);
+        termMap.put(COUNT, String.valueOf(this.count));
+        termMap.put(MI, String.valueOf(this.mi));
+        termMap.put(LE, String.valueOf(this.le));
+        termMap.put(RE, String.valueOf(this.re));
+        termMap.put(SCORE, String.valueOf(this.score));
+        return termMap;
+    }
+
+    /**
+     * Map对象  转 Term
+     */
+    public static Term getTermObjectFromMap(Map<String, String> termMap) {
+        Term term = new Term();
+        term.setSeg(termMap.get(SEG));
+        term.setCount(Integer.valueOf(termMap.get(COUNT)));
+        term.setMi(Float.valueOf(termMap.get(MI)));
+        term.setLe(Float.valueOf(termMap.get(LE)));
+        term.setRe(Float.valueOf(termMap.get(RE)));
+        term.setScore(Float.valueOf(termMap.get(SCORE)));
+        return term;
+    }
+
+
     @Override
     public String toString() {
         return seg;
     }
+
     public String toTotalString() {
         return "Term{" +
                 "seg='" + seg + '\'' +

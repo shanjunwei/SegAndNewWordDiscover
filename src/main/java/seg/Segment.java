@@ -22,7 +22,7 @@ public class Segment {
     static {
         //JsonSerializationUtil.serilizableStatisticsToFile();    // 序列化计算结果
         //JsonSerializationUtil.deserilizableStatistics();    // 反序列化
-        JsonSerializationUtil.loadTrieFromFile();  // 反序列化字典树
+        //JsonSerializationUtil.loadTrieFromFile();  // 反序列化字典树
     }
 
     /**
@@ -74,8 +74,8 @@ public class Segment {
             } else {
                 List<Term> termList = HanUtils.segmentToTerm(str, false);
                 List<Term> result = extractWordsFromNGram(termList);
-                for(Term  term: result){
-                    exactWords.append(" "+term);
+                for (Term term : result) {
+                    exactWords.append(" " + term);
                 }
             }
         }
@@ -188,7 +188,7 @@ public class Segment {
         });
         // 排序
         if (DEBUG_MODE) System.out.println("第二轮筛选前: " + result_list);
-        result_list.sort((o1, o2) -> Double.compare(segTermMap.get(o2.getSeg()).score, segTermMap.get(o1.getSeg()).score));
+        result_list.sort((o1, o2) -> Double.compare(Double.valueOf(redis.hget(o2.seg, SCORE)), Double.valueOf(redis.hget(o1.seg, SCORE))));
         if (DEBUG_MODE) System.out.println("第二轮排序后——————————> " + result_list);
         List<Term> final_result = new ArrayList<>();
         for (int i = 0; i < result_list.size(); i++) {
@@ -211,28 +211,28 @@ public class Segment {
         Occurrence occurrence = new Occurrence();
         // 计算候选词的 互信息 和 信息熵
         for (Term seg : termList) {
-            Term term = segTermMap.get(seg.seg);
+            //Term term = segTermMap.get(seg.seg);
+            Term term = Term.getTermObjectFromMap(redis.hgetAll(seg.seg));   // 从redis中读取
             if (term != null) {
                 // 信息熵过滤
                 if (occurrence.EntropyFilter(term.le, term.re)) { // 过滤掉信息熵过滤明显不是词的
                     if (DEBUG_MODE)
                         System.out.println("信息熵过滤-> " + seg + "   mi->   " + term.mi + " le->" + term.le + " re->" + term.re);
-                    term.setScore(0);
                 }
                 // 互信息过滤
                 else if (occurrence.MutualInformationFilter(term.mi)) {
                     if (DEBUG_MODE)
                         System.out.println("互信息过滤-> " + seg + "   mi->   " + term.mi + " le->" + term.le + " re->" + term.re);
-                    term.setScore(0);
                 } else {
                     float score = occurrence.getNormalizedScore(term);
+                    redis.hset(seg.seg, SCORE, String.valueOf(score));  // 修改某一属性值
                     term.setScore(score);   // 赋值
                     result.add(seg);
                 }
             }
         }
         // 对候选集根据 归一化得分 降序排列
-        result.sort((o1, o2) -> Double.compare(segTermMap.get(o2.getSeg()).score, segTermMap.get(o1.getSeg()).score));
+        result.sort((o1, o2) -> Double.compare(Double.valueOf(redis.hget(o2.seg, SCORE)), Double.valueOf(redis.hget(o1.seg, SCORE))));
         if (DEBUG_MODE) System.out.println("   第一轮排序后*****->   " + result + "\n");
         return result.size() == 0 ? null : result.get(0);
     }

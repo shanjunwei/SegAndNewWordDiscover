@@ -1,6 +1,5 @@
 package computer;
 
-import org.omg.CORBA.INTERNAL;
 import pojo.Term;
 import util.HanUtils;
 
@@ -10,7 +9,6 @@ import java.util.Set;
 
 import static config.Config.*;
 import static config.Constants.*;
-import static config.Constants.wcMap;
 
 /**
  * 词共现 统计量计算,包括 互信息,左右熵
@@ -58,9 +56,18 @@ public class Occurrence {
             float mi = computeMutualInformation(seg);
             //totalMI = totalMI + mi;
             maxMI = Math.max(maxMI, mi);   // 计算最大互信息
-            Term term = new Term(seg, wcMap.get(seg), mi, leftEntropy, rightEntropy);
-            segTermMap.put(seg, term);
-            trieRight.put(seg,term);
+            Term term = new Term(seg, wcMap.get(seg), mi, leftEntropy, rightEntropy);  // 这里没办法算最后得分
+            //segTermMap.put(seg, term);
+            // 将map存入redis中
+            /**********************  redis存取 **************************/
+         /*   Map<String, String> termMap = new HashMap();
+            termMap.put(SEG, seg);
+            termMap.put(COUNT, String.valueOf(wcMap.get(seg)));
+            termMap.put(MI, String.valueOf(mi));
+            termMap.put(LE, String.valueOf(leftEntropy));
+            termMap.put(RE, String.valueOf(rightEntropy));*/
+            redis.hmset(seg, term.convertToMap());
+            /**********************  redis存取 **************************/
             count++;
             if (count % 100000 == 0) {
                 System.out.print("*");
@@ -71,6 +78,9 @@ public class Occurrence {
                 continue;
             }
         }
+        wcMap.clear();   // 释放无用的内存
+        Term max_term = new Term(MAX_KEY, 0, maxMI, maxLE, maxRE);
+        redis.hmset(MAX_KEY, max_term.convertToMap());    // 保存最大值
         System.out.println("统计量计算总耗时: " + (System.currentTimeMillis() - t1) + "ms");
     }
 
