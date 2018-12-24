@@ -51,7 +51,7 @@ public class Occurrence {
             maxRE = Math.max(maxRE, rightEntropy);  // 求最大右信息熵
             float leftEntropy = computeLeftEntropy(seg);
             // totalLE = totalLE + leftEntropy;
-            maxLE = Math.max(maxLE, rightEntropy);  // 求最大左信息熵
+            maxLE = Math.max(maxLE, leftEntropy);  // 求最大左信息熵
             // 2. 计算互信息
             float mi = computeMutualInformation(seg);
             //totalMI = totalMI + mi;
@@ -154,7 +154,7 @@ public class Occurrence {
         for (List<String> combine : possibleCombines) {
             String x = combine.get(0);
             String y = combine.get(1);
-            result = computeMI(co_occurrence, x, y);
+            result += computeMI(co_occurrence, x, y);   // 累加
         }
         return result;
     }

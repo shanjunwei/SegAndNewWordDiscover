@@ -1,6 +1,7 @@
 package seg;
 
 import computer.Occurrence;
+import config.Config;
 import config.Constants;
 import org.apache.commons.lang.StringUtils;
 import pojo.Term;
@@ -23,6 +24,9 @@ public class Segment {
         //JsonSerializationUtil.serilizableStatisticsToFile();    // 序列化计算结果
         //JsonSerializationUtil.deserilizableStatistics();    // 反序列化
         //JsonSerializationUtil.loadTrieFromFile();  // 反序列化字典树
+        Config.maxMI  =  Float.valueOf(redis.hget(MAX_KEY,MI));
+        Config.maxLE  =  Float.valueOf(redis.hget(MAX_KEY,LE));
+        Config.maxRE  =  Float.valueOf(redis.hget(MAX_KEY,RE));
     }
 
     /**
@@ -66,10 +70,9 @@ public class Segment {
         if (StringUtils.isBlank(text)) return text;
         // 将字符串以非中文字符切割成片段
         String[] array = HanUtils.replaceNonChineseCharacterAsBlank(text);
-
         StringBuilder exactWords = new StringBuilder();
         for (String str : array) {
-            if (str.length() == 1) {     // 落单的一个字单独成词,候选不包含一个字的
+            if (str.length() <= 1) {     // 落单的一个字单独成词,候选不包含一个字的
                 exactWords.append(" " + str);
             } else {
                 List<Term> termList = HanUtils.segmentToTerm(str, false);
@@ -79,6 +82,7 @@ public class Segment {
                 }
             }
         }
+        System.out.println("———> "+exactWords.toString().trim());
         return exactWords.toString().trim();
     }
 

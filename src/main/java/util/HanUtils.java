@@ -318,13 +318,10 @@ public class HanUtils {
             p++;
         }
     }
-
-
     // 切分词  FMM 算法
     public static List<String> getFMMList(String text, boolean countWordFrequency) {
         // 额外统计单个字的词频
         if (countWordFrequency) {
-            System.out.println("统计单个字的词频");
             wordCountSingleWord(text);
         }
         if (text.length() == 1) {
@@ -523,6 +520,47 @@ public class HanUtils {
                 list43.add(str.substring(0, 2));
                 list43.add(str.substring(2));   // 2 2
                 result.add(list43);
+                break;
+            case 5:
+                List<String> list51 = new ArrayList<>();
+                list51.add(str.substring(0, 1));
+                list51.add(str.substring(1));
+                result.add(list51);   //  1 4
+                List<String> list52 = new ArrayList<>();
+                list52.add(str.substring(0, 2));
+                list52.add(str.substring(2));   // 2 3
+                result.add(list52);
+                List<String> list53 = new ArrayList<>();
+                list53.add(str.substring(0, 3));
+                list53.add(str.substring(3));   // 3 2
+                result.add(list53);
+                List<String> list54 = new ArrayList<>();
+                list54.add(str.substring(0, 4));
+                list54.add(str.substring(4));   // 4 1
+                result.add(list54);
+                break;
+
+            case 6:
+                List<String> list61 = new ArrayList<>();
+                list61.add(str.substring(0, 1));
+                list61.add(str.substring(1));
+                result.add(list61);   //  1 5
+                List<String> list62 = new ArrayList<>();
+                list62.add(str.substring(0, 2));
+                list62.add(str.substring(2));   // 2 4
+                result.add(list62);
+                List<String> list63 = new ArrayList<>();
+                list63.add(str.substring(0, 3));
+                list63.add(str.substring(3));   // 3 3
+                result.add(list63);
+                List<String> list64 = new ArrayList<>();
+                list64.add(str.substring(0, 4));
+                list64.add(str.substring(4));   // 4 2
+                result.add(list64);
+                List<String> list65 = new ArrayList<>();
+                list65.add(str.substring(0, 5));
+                list65.add(str.substring(5));   // 5 1
+                result.add(list65);
                 break;
         }
         return result;

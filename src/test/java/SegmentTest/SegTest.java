@@ -1,4 +1,5 @@
 package SegmentTest;
+import config.Config;
 import config.Constants;
 import org.apache.commons.lang.StringUtils;
 import seg.Segment;
@@ -15,6 +16,12 @@ import static config.Constants.DEBUG_MODE;
  * 分词测试类
  */
 public class SegTest {
+
+    static {
+        //Constants.redis.auth("root");
+    }
+
+
     public static void main(String[] args) {
         //Constants.NovelTest = true;
         //testSingleSentenceSeg(args);
@@ -23,9 +30,11 @@ public class SegTest {
         //testDebugByFileLine("H:\\小说\\《冰与火之歌》全集.txt",100);   // debug
         //testDebugByFileLine(Config.ErrorSegPath,600);
         //testAllChineseSeg(args);
-        saveCalculateResultToRedis();    // 重新序列化计算结果到文件
+        //saveCalculateResultToRedis();    // 重新序列化计算结果到文件
         //testExtractWords(args);   // 测试抽词
         //testSerializateTrieToFile();
+        //testRediSave(args);
+        testExtractWord(args);
     }
 
     /**
@@ -100,11 +109,10 @@ public class SegTest {
      * 测试 保存结算结果到redis
      */
     public static void saveCalculateResultToRedis() {
-        //Constants.NovelTest = true;
-        //Config.NovelPath = "D:\\HanLP\\novel\\天龙八部.txt";
+        Constants.NovelTest = true;
+        Config.NovelPath = "D:\\HanLP\\novel\\天龙八部.txt";
+        //Constants.redis.flushAll();    // 先刷掉之前所有结果
         JsonSerializationUtil.saveCalculateResultToRedis();
-
-
         //System.out.println(Constants.redis.hgetAll("从此"));
     }
 
@@ -115,7 +123,26 @@ public class SegTest {
     public static void testExtractWords(String[] args) {
         Constants.NovelTest = true;
         Constants.DEBUG_MODE = true;
-      //  Constants.redis.
+
+        Segment segment = new Segment();
+        System.out.println("抽词结果----->" + segment.extractWords(args[0]) + "<---");
+    }
+
+
+    /**
+     * 测试 redis 存取
+     */
+    public static void testRediSave(String[] args) {
+        System.out.println(Constants.redis.hgetAll(args[0]));
+    }
+
+
+    /**
+     * 测试 抽词
+     */
+    public static void testExtractWord(String[] args) {
+        Constants.NovelTest = true;
+        Constants.DEBUG_MODE = true;
 
         Segment segment = new Segment();
         System.out.println("抽词结果----->" + segment.extractWords(args[0]) + "<---");

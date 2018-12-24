@@ -62,7 +62,7 @@ public class Constants {
 
     static {
         // initStopWords();
-        redis.auth("root");  // redis 权限验证
+       // redis.auth("root");  // redis 权限验证
     }
 
     //  初始化停用词哈希表
