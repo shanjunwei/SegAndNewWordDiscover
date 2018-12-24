@@ -1,6 +1,4 @@
 package config;
-
-import pojo.Term;
 import redis.clients.jedis.Jedis;
 import trie.bintrie.BinTrie;
 import util.FileUtils;
@@ -32,20 +30,15 @@ public class Constants {
     public static boolean NovelTest = false;   // 是测试小说还是人民日报语料,默认的是人名日报
     public static String NOVEL;
     public static HashSet stopWordSet = new HashSet();     // 停用词哈希表
-
     //连接本地的 Redis 服务
     public static final Jedis redis = new Jedis("localhost");   // redis client
-
     public static Map<String, Integer> wcMap = new HashMap<>(1000000);   // 用于存储切分结果和统计词频
-
-    public static Map<String, Integer> singWordCountMap = new ConcurrentHashMap<>();   // 单字词频
+    public static Map<String, Integer> singWordCountMap = new ConcurrentHashMap<>(100000);   // 单字词频
 
     //public static Map<String, Term> segTermMap = new HashMap<>(1000000);   //用于统计量归一化计算,占用内存空间太大，准备弃用
-
 /*    public static final List<Float> LElist = new ArrayList<>();   //左熵
     public static final List<Float> RElist = new ArrayList<>();   //右熵
     public static final List<Float> MI_list = new ArrayList<>();   //互信息*/
-
     /**
      * 字典树,用于左前缀查询
      */
@@ -53,7 +46,7 @@ public class Constants {
     /**
      * 字典树,用于右前缀查询，也可以用于序列化计算结果
      */
-    public static BinTrie<Term> trieRight = new BinTrie<>();
+    public static BinTrie<Integer> trieRight = new BinTrie<>();
 
     /**
      * 字典树,用于序列化计算结果
@@ -62,7 +55,7 @@ public class Constants {
 
     static {
         // initStopWords();
-       // redis.auth("root");  // redis 权限验证
+        redis.auth("root");  // redis 权限验证
     }
 
     //  初始化停用词哈希表

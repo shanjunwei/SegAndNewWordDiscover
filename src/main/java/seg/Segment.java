@@ -67,6 +67,7 @@ public class Segment {
      * 传进来的是一句话,里面可能包含非中文字符
      */
     public String extractWords(String text) {
+        long  t1  =  System.currentTimeMillis();
         if (StringUtils.isBlank(text)) return text;
         // 将字符串以非中文字符切割成片段
         String[] array = HanUtils.replaceNonChineseCharacterAsBlank(text);
@@ -82,7 +83,7 @@ public class Segment {
                 }
             }
         }
-        System.out.println("———> "+exactWords.toString().trim());
+        System.out.println("———> "+exactWords.toString().trim() +"    cost: "+(System.currentTimeMillis()-t1)+" ms");
         return exactWords.toString().trim();
     }
 

@@ -11,7 +11,7 @@ public class Config {
     public static final int MAX_STOP_WORD_LEN = 4;  // 停用词最大长度为4
     public static final int MAX_WORD_LEN = 5 + 1;  // 分词最大长度为6
     public static final float entropy_theta = 0.4f;  // 左右信息熵比值过滤  之前采用0.78 现在试试0.44
-    public static final float MI_THRESHOLD_VALUE = 0.02f;  // 互信息过滤阈值,之前用的0.89
+    public static final float MI_THRESHOLD_VALUE = 0.31f;  // 互信息过滤阈值,之前用的0.89
     public static final int MAX_WORD_COUNT = 1;  // 分词最小词频
     public static final float beta = 0.51f;  // 置信度 β
     public final static float MIN_LEFT_ENTROPY = 0.01f;   // 最小左熵,用于左邻熵过滤

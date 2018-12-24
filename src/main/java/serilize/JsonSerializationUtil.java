@@ -56,18 +56,6 @@ public class JsonSerializationUtil {
     }
 
     /**
-     * 反序列化字典树到内存
-     */
-    public static void loadTrieFromFile() {
-        long t1 = System.currentTimeMillis();
-        trieRight.load(trailSerailPath, new Term[100]);
-
-        System.out.println("保存字典树的容量->" + trieRight.size());
-        System.out.println("取出一条检查: 人民->" + trieRight.get("人民").toTotalString());
-        System.out.println("反序列化文件到内存耗时:  " + (System.currentTimeMillis() - t1) + " ms");
-    }
-
-    /**
      * 反序列化统计量到内存
      */
 /*    public static void deserilizableStatistics() {

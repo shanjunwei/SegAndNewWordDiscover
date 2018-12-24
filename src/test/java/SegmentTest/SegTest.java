@@ -34,7 +34,7 @@ public class SegTest {
         //testExtractWords(args);   // ≤‚ ‘≥È¥ 
         //testSerializateTrieToFile();
         //testRediSave(args);
-        testExtractWord(args);
+        //testExtractWord(args);
     }
 
     /**

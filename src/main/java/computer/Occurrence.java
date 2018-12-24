@@ -37,35 +37,25 @@ public class Occurrence {
         long t1 = System.currentTimeMillis();
 
         totalTerm = wcMap.size();
-        for (String seg : wcMap.keySet()) {
-            Term term = new Term(seg, wcMap.get(seg));
-            trieRight.put(seg, term);     // 右前缀字典树
-            trieLeft.put(HanUtils.reverseString(seg), wcMap.get(seg));  // 左前缀字典树
-            totalCount = totalCount + wcMap.get(seg);    // 计算总词频
+        for (Map.Entry<String, Integer> entry : wcMap.entrySet()) {
+            trieRight.put(entry.getKey(), entry.getValue());     // 右前缀字典树
+            trieLeft.put(HanUtils.reverseString(entry.getKey()), entry.getValue());  // 左前缀字典树
+            totalCount = totalCount + entry.getValue();    // 计算总词频
         }
-        System.out.println("总词频-----》" + totalCount);
-        for (String seg : wcMap.keySet()) {
+        for (Map.Entry<String, Integer> entry : wcMap.entrySet()) {
+            String seg = entry.getKey();
+            int seg_count = entry.getValue();
             // 1. 计算信息熵
-            float rightEntropy = computeRightEntropy(seg);
-            //totalRE = totalRE + rightEntropy;
-            maxRE = Math.max(maxRE, rightEntropy);  // 求最大右信息熵
-            float leftEntropy = computeLeftEntropy(seg);
-            // totalLE = totalLE + leftEntropy;
-            maxLE = Math.max(maxLE, leftEntropy);  // 求最大左信息熵
+            float rightEntropy = computeRightEntropy(seg,seg_count);
+            maxRE = Math.max(maxRE, rightEntropy);  // 求最大右信息熵   //totalRE = totalRE + rightEntropy;
+            float leftEntropy = computeLeftEntropy(seg,seg_count);
+            maxLE = Math.max(maxLE, leftEntropy);  // 求最大左信息熵    // totalLE = totalLE + leftEntropy;
             // 2. 计算互信息
             float mi = computeMutualInformation(seg);
-            //totalMI = totalMI + mi;
-            maxMI = Math.max(maxMI, mi);   // 计算最大互信息
-            Term term = new Term(seg, wcMap.get(seg), mi, leftEntropy, rightEntropy);  // 这里没办法算最后得分
-            //segTermMap.put(seg, term);
+            maxMI = Math.max(maxMI, mi);   // 计算最大互信息  //totalMI = totalMI + mi;
+            Term term = new Term(seg, seg_count, mi, leftEntropy, rightEntropy);  // 这里没办法算最后得分
             // 将map存入redis中
             /**********************  redis存取 **************************/
-         /*   Map<String, String> termMap = new HashMap();
-            termMap.put(SEG, seg);
-            termMap.put(COUNT, String.valueOf(wcMap.get(seg)));
-            termMap.put(MI, String.valueOf(mi));
-            termMap.put(LE, String.valueOf(leftEntropy));
-            termMap.put(RE, String.valueOf(rightEntropy));*/
             redis.hmset(seg, term.convertToMap());
             /**********************  redis存取 **************************/
             count++;
@@ -85,33 +75,33 @@ public class Occurrence {
     }
 
     /**
-     * 计算左邻熵  测试正确
+     * 计算左邻熵
      */
-    public float computeLeftEntropy(String prefix) {
+    public float computeLeftEntropy(String prefix, int prefix_count) {
         Set<Map.Entry<String, Integer>> entrySet = trieLeft.prefixSearch(HanUtils.reverseString(prefix));
-        return computeEntropy(entrySet, prefix);
+        return computeEntropy(entrySet, prefix, prefix_count);
     }
 
     /**
      * 计算右邻熵
      */
-    public float computeRightEntropy(String prefix) {
-        Set<Map.Entry<String, Term>> entrySet = trieRight.prefixSearch(prefix);
-        return computeEntropy2(entrySet, prefix);
+    public float computeRightEntropy(String prefix, int prefix_count) {
+        Set<Map.Entry<String, Integer>> entrySet = trieRight.prefixSearch(prefix);
+        return computeEntropy(entrySet, prefix, prefix_count);
     }
-
 
     /**
      * 信息熵计算
      */
-    private float computeEntropy(Set<Map.Entry<String, Integer>> entrySet, String prefix) {
+    private float computeEntropy(Set<Map.Entry<String, Integer>> entrySet, String prefix, int prefix_count) {
         float totalFrequency = 0;
-        for (Map.Entry<String, Integer> entry : entrySet) {
+      /*  for (Map.Entry<String, Integer> entry : entrySet) {
             if (entry.getKey().length() != prefix.length() + 1) {
                 continue;
             }
             totalFrequency += entry.getValue();
-        }
+        }*/
+        totalFrequency = prefix_count;
         float le = 0;
         for (Map.Entry<String, Integer> entry : entrySet) {
             if (entry.getKey().length() != prefix.length() + 1) {
@@ -123,27 +113,6 @@ public class Occurrence {
         return le;
     }
 
-    /**
-     * 信息熵计算
-     */
-    private float computeEntropy2(Set<Map.Entry<String, Term>> entrySet, String prefix) {
-        float totalFrequency = 0;
-        for (Map.Entry<String, Term> entry : entrySet) {
-            if (entry.getKey().length() != prefix.length() + 1) {
-                continue;
-            }
-            totalFrequency += entry.getValue().getCount();
-        }
-        float le = 0;
-        for (Map.Entry<String, Term> entry : entrySet) {
-            if (entry.getKey().length() != prefix.length() + 1) {
-                continue;
-            }
-            float p = entry.getValue().getCount() / totalFrequency;
-            le += -p * Math.log(p);
-        }
-        return le;
-    }
 
     /**
      * 计算互信息 穷举当前切分的所有可能组合，将互信息全部计算,然后取最小值
@@ -163,7 +132,6 @@ public class Occurrence {
      * 计算互信息
      */
     private float computeMI(String co_occurrence, String x, String y) {
-        //System.out.println(co_occurrence +" 的词频->"+wcMap.get(co_occurrence) +" 总词频:->"+ totalCount);
         double p_xy = Math.max(MIN_PROBABILITY, (double) wcMap.get(co_occurrence) / (double) totalCount);
         int x_count = x.length() == 1 ? singWordCountMap.get(x) : wcMap.get(x);
         double p_x = Math.max(MIN_PROBABILITY, (double) x_count / (double) totalCount);
@@ -182,8 +150,6 @@ public class Occurrence {
 
         if (DEBUG_MODE)
             System.out.println("   maxMI->   " + maxMI + "maxLE->" + maxLE + " maxRE->" + maxRE);
-
-        // Term term = segTermMap.get(seg);
         //term.score = term.mi / totalMI + term.le / totalLE + term.re / totalRE;   // 归一化
         //term.score = term.mi / totalMI + Math.min(term.le / totalLE, term.re / totalRE);   // 01更换归一化策略 -> 取左右熵最小值
         // 用log 函数进行归一化,参考 http://www.cnblogs.com/pejsidney/p/8031250.html
@@ -242,5 +208,26 @@ public class Occurrence {
         stringBuilder.append(right);
         return stringBuilder.toString();
     }
-
 }
+/*  *//**
+ * 信息熵计算
+ *//*
+    private float computeEntropy2(Set<Map.Entry<String, Term>> entrySet, String prefix) {
+        float totalFrequency = 0;
+        for (Map.Entry<String, Term> entry : entrySet) {
+            if (entry.getKey().length() != prefix.length() + 1) {
+                continue;
+            }
+            totalFrequency += entry.getValue().getCount();
+        }
+        float le = 0;
+        for (Map.Entry<String, Term> entry : entrySet) {
+            if (entry.getKey().length() != prefix.length() + 1) {
+                continue;
+            }
+            float p = entry.getValue().getCount() / totalFrequency;
+            le += -p * Math.log(p);
+        }
+        return le;
+    }
+*/
