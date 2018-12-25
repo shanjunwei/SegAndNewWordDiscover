@@ -24,13 +24,13 @@ public class SegTest {
 
     public static void main(String[] args) {
         //Constants.NovelTest = true;
-        //testSingleSentenceSeg(args);
+        testSingleSentenceSeg(args);
         //testRepeatRegx(args);
         //testCalculationAndSerializationToFile();    //  计算并序列化到文件
         //testDebugByFileLine("H:\\小说\\《冰与火之歌》全集.txt",100);   // debug
         //testDebugByFileLine(Config.ErrorSegPath,600);
         //testAllChineseSeg(args);
-        //saveCalculateResultToRedis();    // 重新序列化计算结果到文件
+        //saveCalculateResultToRedis();    // 重新序列化计算结果到redis
         //testExtractWords(args);   // 测试抽词
         //testSerializateTrieToFile();
         //testRediSave(args);
@@ -109,8 +109,8 @@ public class SegTest {
      * 测试 保存结算结果到redis
      */
     public static void saveCalculateResultToRedis() {
-        Constants.NovelTest = true;
-        Config.NovelPath = "D:\\HanLP\\novel\\天龙八部.txt";
+//        Constants.NovelTest = true;
+//        Config.NovelPath = "D:\\HanLP\\novel\\天龙八部.txt";
         //Constants.redis.flushAll();    // 先刷掉之前所有结果
         JsonSerializationUtil.saveCalculateResultToRedis();
         //System.out.println(Constants.redis.hgetAll("从此"));

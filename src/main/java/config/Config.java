@@ -1,6 +1,8 @@
 package config;
 
-import static config.Constants.NovelTest;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
+import java.util.Properties;
 
 /**
  * Created by bruce_shan on 2018/12/4 16:51.
@@ -9,17 +11,18 @@ import static config.Constants.NovelTest;
 public class Config {
     public final static double MIN_PROBABILITY = 1e-10;   // 10 的负10 次方
     public static final int MAX_STOP_WORD_LEN = 4;  // 停用词最大长度为4
-    public static final int MAX_WORD_LEN = 5 + 1;  // 分词最大长度为6
-    public static final float entropy_theta = 0.4f;  // 左右信息熵比值过滤  之前采用0.78 现在试试0.44
-    public static final float MI_THRESHOLD_VALUE = 0.31f;  // 互信息过滤阈值,之前用的0.89
+    public static int MAX_WORD_LEN = 5 + 1;  // 分词最大长度为6
+    public static float ENTROPY_THETA = 0.4f;  // 左右信息熵比值过滤  之前采用0.78 现在试试0.44
+    public static float MI_THRESHOLD_VALUE = 1.0f;  // 互信息过滤阈值,之前用的0.89
     public static final int MAX_WORD_COUNT = 1;  // 分词最小词频
     public static final float beta = 0.51f;  // 置信度 β
-    public final static float MIN_LEFT_ENTROPY = 0.01f;   // 最小左熵,用于左邻熵过滤
-    public final static float MIN_RIGHT_ENTROPY = 0.01f;   // 最小右熵,用于右邻熵过滤
-    public static String NovelPath = "data\\test-text.txt"; // 语料入口
+    public static float MIN_LEFT_ENTROPY = 0.01f;   // 最小左熵,用于左邻熵过滤
+    public static float MIN_RIGHT_ENTROPY = 0.01f;   // 最小右熵,用于右邻熵过滤
+    public static String CORPUS_INPUT_PATH = "data\\test-text.txt"; // 语料入口
     //public static String segTermMapPath = "data\\segTermMap.txt";   //序列化文件输出路径
     public static String ErrorSegPath = "data/error_seg.txt"; // 切分错误的行记录
     public static final String trailSerailPath = "data/trail_save.txt"; // 切分错误的行记录
+    public static String REDIS_AUTH_PASSWORD = "root"; // redis验证的密码
 
     /**
      * 切分段去重后 总互信息
@@ -48,10 +51,20 @@ public class Config {
      */
     public static float maxRE = 0f;
 
-
     static {
-        if (NovelTest == true) {
-            NovelPath = "D:\\HanLP\\novel\\平凡的世界.txt"; // 语料入口
+        /****************************************** 读取配置文件 ************************************************/
+        Properties p = new Properties();
+        try {
+            p.load(new InputStreamReader(new FileInputStream("segment.properties"), "UTF-8"));
+            MI_THRESHOLD_VALUE = Float.valueOf(p.getProperty("MI_THRESHOLD_VALUE", String.valueOf(MI_THRESHOLD_VALUE)));
+            ENTROPY_THETA = Float.valueOf(p.getProperty("ENTROPY_THETA", String.valueOf(ENTROPY_THETA)));
+            MAX_WORD_LEN = Integer.valueOf(p.getProperty("MAX_WORD_LEN", String.valueOf(MAX_WORD_LEN)));
+            MIN_LEFT_ENTROPY = Float.valueOf(p.getProperty("MIN_LEFT_ENTROPY", String.valueOf(MIN_LEFT_ENTROPY)));
+            MIN_RIGHT_ENTROPY = Float.valueOf(p.getProperty("MIN_RIGHT_ENTROPY", String.valueOf(MIN_RIGHT_ENTROPY)));
+            REDIS_AUTH_PASSWORD = p.getProperty("REDIS_AUTH_PASSWORD", REDIS_AUTH_PASSWORD);  // redis 密码
+            CORPUS_INPUT_PATH = p.getProperty("CORPUS_INPUT_PATH", CORPUS_INPUT_PATH);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -68,4 +81,6 @@ public class Config {
      * 字典树序列化路径
      */
     public static String SerialPath = "D:\\BigData\\HanLP\\trie_serial.txt";
+
+
 }

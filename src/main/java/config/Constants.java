@@ -54,6 +54,8 @@ public class Constants {
 //    public static BinTrie<Integer> trieRight = new BinTrie<>();
 
     static {
+        // 自动读取配置
+
         // initStopWords();
         redis.auth("root");  // redis 权限验证
     }

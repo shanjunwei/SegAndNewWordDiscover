@@ -170,7 +170,7 @@ public class Occurrence {
         }
         float min = Math.min(leftEntropy, rightEntropy);
         float max = Math.max(leftEntropy, rightEntropy);
-        if (min / max < entropy_theta) return true;
+        if (min / max < ENTROPY_THETA) return true;
 
         return false;
     }

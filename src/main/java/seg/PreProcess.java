@@ -19,7 +19,7 @@ public class PreProcess {
     public void initData() {   // 数据预处理,针对人民日报语料做一些修改
         try {
             // 以utf-8读取文件
-            FileInputStream fis = new FileInputStream(Config.NovelPath);
+            FileInputStream fis = new FileInputStream(Config.CORPUS_INPUT_PATH);
             InputStreamReader reader = new InputStreamReader(fis, "UTF-8");
             BufferedReader br = new BufferedReader(reader);
             String str = null;
@@ -45,7 +45,7 @@ public class PreProcess {
 
     public void initNovel() {   // 数据预处理,针对人民日报语料做一些修改
         // 读取小说文本
-        String novel = FileUtils.readFileToString(Config.NovelPath);
+        String novel = FileUtils.readFileToString(Config.CORPUS_INPUT_PATH);
         String[] replaceNonChinese = HanUtils.replaceNonChineseCharacterAsBlank(novel);  // 去掉非中文字符   里边没有逗号
         // 再拆分停用词
         for (int i = 0; i < replaceNonChinese.length; i++) {
