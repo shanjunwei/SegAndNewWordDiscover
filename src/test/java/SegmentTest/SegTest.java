@@ -4,27 +4,19 @@ import config.Constants;
 import org.apache.commons.lang.StringUtils;
 import seg.Segment;
 import serilize.JsonSerializationUtil;
-
 import java.io.*;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static config.Constants.DEBUG_MODE;
 
 /**
  * 分词测试类
  */
 public class SegTest {
 
-    static {
-        //Constants.redis.auth("root");
-    }
-
-
     public static void main(String[] args) {
         //Constants.NovelTest = true;
-        testSingleSentenceSeg(args);
+        //testSingleSentenceSeg(args);
         //testRepeatRegx(args);
         //testCalculationAndSerializationToFile();    //  计算并序列化到文件
         //testDebugByFileLine("H:\\小说\\《冰与火之歌》全集.txt",100);   // debug
@@ -34,9 +26,8 @@ public class SegTest {
         //testExtractWords(args);   // 测试抽词
         //testSerializateTrieToFile();
         //testRediSave(args);
-        //testExtractWord(args);
+        testExtractWord(args);
     }
-
     /**
      * 测试单个句子
      */
@@ -46,8 +37,7 @@ public class SegTest {
         if (StringUtils.isBlank(test_text)) System.exit(0);
         //  将信息熵 互信息等统计量加入到过滤决策机制中
         Segment segment = new Segment();
-        //NovelTest = true;
-        DEBUG_MODE = true;
+        Config.DEBUG_MODE = true;
         List<String> result = segment.segment(test_text);
         System.out.println("\n*************************分词结果集" + result + "*************************\n");
     }
@@ -63,7 +53,7 @@ public class SegTest {
         //  将信息熵 互信息等统计量加入到过滤决策机制中
         Segment segment = new Segment();
         //NovelTest = true;
-        DEBUG_MODE = true;
+        Config.DEBUG_MODE = true;
 
         System.out.println("\n*************************分词结果集->" + segment.segmentWithAllChinese(test_text) + "<-*************************\n");
     }
@@ -85,7 +75,7 @@ public class SegTest {
      * 测试 之前分错的前1000行并输出调试信息
      */
     public static void testDebugByFileLine(String inputPath, int line) {
-        DEBUG_MODE = true;
+        Config.DEBUG_MODE = true;
         int count = 0;
         Segment segment = new Segment();
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(inputPath), "utf-8"))) {
@@ -121,11 +111,10 @@ public class SegTest {
      * 测试抽词
      */
     public static void testExtractWords(String[] args) {
-        Constants.NovelTest = true;
-        Constants.DEBUG_MODE = true;
+        Config.DEBUG_MODE = true;
 
         Segment segment = new Segment();
-        System.out.println("抽词结果----->" + segment.extractWords(args[0]) + "<---");
+        //System.out.println("抽词结果----->" + segment.extractWords(args[0]) + "<---");
     }
 
 
@@ -142,9 +131,8 @@ public class SegTest {
      */
     public static void testExtractWord(String[] args) {
         Constants.NovelTest = true;
-        Constants.DEBUG_MODE = true;
-
+        Config.DEBUG_MODE = true;
         Segment segment = new Segment();
-        System.out.println("抽词结果----->" + segment.extractWords(args[0]) + "<---");
+        //System.out.println("抽词结果----->" + segment.extractWords(args[0]) + "<---");
     }
 }

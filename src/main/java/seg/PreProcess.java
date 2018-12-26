@@ -5,10 +5,7 @@ import config.Config;
 import org.apache.commons.lang.StringUtils;
 import util.FileUtils;
 import util.HanUtils;
-
 import java.io.*;
-import java.util.LinkedHashSet;
-
 import static config.Config.MAX_STOP_WORD_LEN;
 import static config.Constants.stopWordSet;
 

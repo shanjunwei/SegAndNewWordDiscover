@@ -10,8 +10,6 @@ import java.util.concurrent.ConcurrentHashMap;
  * 常量
  */
 public class Constants {
-    public static boolean DEBUG_MODE = false;   //分词DEBUG 模式
-
     public static final String HAS_SPECIAL_CHAR = "hasSpecial";
     public static final String STR_REPLACE_SPECIAL = "str";
     public static final String MAX_KEY = "max";
@@ -31,7 +29,7 @@ public class Constants {
     public static String NOVEL;
     public static HashSet stopWordSet = new HashSet();     // 停用词哈希表
     //连接本地的 Redis 服务
-    public static final Jedis redis = new Jedis("localhost");   // redis client
+    public static Jedis redis = null;   // redis client，由外部传入
     public static Map<String, Integer> wcMap = new HashMap<>(1000000);   // 用于存储切分结果和统计词频
     public static Map<String, Integer> singWordCountMap = new ConcurrentHashMap<>(100000);   // 单字词频
 
@@ -57,7 +55,7 @@ public class Constants {
         // 自动读取配置
 
         // initStopWords();
-        redis.auth("root");  // redis 权限验证
+        //redis.auth("root");  // redis 权限验证
     }
 
     //  初始化停用词哈希表

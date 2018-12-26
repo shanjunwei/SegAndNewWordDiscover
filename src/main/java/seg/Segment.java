@@ -5,6 +5,7 @@ import config.Config;
 import config.Constants;
 import org.apache.commons.lang.StringUtils;
 import pojo.Term;
+import redis.clients.jedis.Jedis;
 import serilize.JsonSerializationUtil;
 import util.HanUtils;
 
@@ -12,7 +13,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
+import static config.Config.DEBUG_MODE;
 import static config.Constants.*;
 
 /**
@@ -24,9 +28,6 @@ public class Segment {
         //JsonSerializationUtil.serilizableStatisticsToFile();    // 序列化计算结果
         //JsonSerializationUtil.deserilizableStatistics();    // 反序列化
         //JsonSerializationUtil.loadTrieFromFile();  // 反序列化字典树
-        Config.maxMI  =  Float.valueOf(redis.hget(MAX_KEY,MI));
-        Config.maxLE  =  Float.valueOf(redis.hget(MAX_KEY,LE));
-        Config.maxRE  =  Float.valueOf(redis.hget(MAX_KEY,RE));
     }
 
     /**
@@ -66,7 +67,12 @@ public class Segment {
      * 暴露给外部调用的 抽词 接口 TODO*****
      * 传进来的是一句话,里面可能包含非中文字符
      */
-    public String extractWords(String text) {
+    public String extractWords(String text, Jedis  client) {
+        redis  =  client;   // 接收外部传入的redis实例
+        Config.maxMI  =  Float.valueOf(redis.hget(MAX_KEY,MI));
+        Config.maxLE  =  Float.valueOf(redis.hget(MAX_KEY,LE));
+        Config.maxRE  =  Float.valueOf(redis.hget(MAX_KEY,RE));
+
         long  t1  =  System.currentTimeMillis();
         if (StringUtils.isBlank(text)) return text;
         // 将字符串以非中文字符切割成片段
@@ -211,6 +217,7 @@ public class Segment {
 
     //  第一轮筛选
     private Term getTopCandidateFromSet(List<Term> termList) {
+        Lock lock=new ReentrantLock();  // 保证redis 写线程安全
         if (DEBUG_MODE) System.out.println("   第一轮筛选前->   " + termList + "\n");
         List<Term> result = new ArrayList<>();
         Occurrence occurrence = new Occurrence();
@@ -230,7 +237,9 @@ public class Segment {
                         System.out.println("互信息过滤-> " + seg + "   mi->   " + term.mi + " le->" + term.le + " re->" + term.re);
                 } else {
                     float score = occurrence.getNormalizedScore(term);
+                    lock.lock();
                     redis.hset(seg.seg, SCORE, String.valueOf(score));  // 修改某一属性值
+                    lock.unlock();
                     term.setScore(score);   // 赋值
                     result.add(seg);
                 }

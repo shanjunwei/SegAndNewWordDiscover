@@ -23,6 +23,7 @@ public class Config {
     public static String ErrorSegPath = "data/error_seg.txt"; // 切分错误的行记录
     public static final String trailSerailPath = "data/trail_save.txt"; // 切分错误的行记录
     public static String REDIS_AUTH_PASSWORD = "root"; // redis验证的密码
+    public static boolean DEBUG_MODE = false;   //分词DEBUG 模式
 
     /**
      * 切分段去重后 总互信息
@@ -63,6 +64,7 @@ public class Config {
             MIN_RIGHT_ENTROPY = Float.valueOf(p.getProperty("MIN_RIGHT_ENTROPY", String.valueOf(MIN_RIGHT_ENTROPY)));
             REDIS_AUTH_PASSWORD = p.getProperty("REDIS_AUTH_PASSWORD", REDIS_AUTH_PASSWORD);  // redis 密码
             CORPUS_INPUT_PATH = p.getProperty("CORPUS_INPUT_PATH", CORPUS_INPUT_PATH);
+            DEBUG_MODE = Boolean.valueOf(p.getProperty("DEBUG_MODE", String.valueOf(DEBUG_MODE)));
         } catch (Exception e) {
             e.printStackTrace();
         }
