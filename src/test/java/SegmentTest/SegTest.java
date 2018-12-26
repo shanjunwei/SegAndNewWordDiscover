@@ -2,6 +2,7 @@ package SegmentTest;
 import config.Config;
 import config.Constants;
 import org.apache.commons.lang.StringUtils;
+import redis.clients.jedis.Jedis;
 import seg.Segment;
 import serilize.JsonSerializationUtil;
 import java.io.*;
@@ -26,7 +27,8 @@ public class SegTest {
         //testExtractWords(args);   // ²âÊÔ³é´Ê
         //testSerializateTrieToFile();
         //testRediSave(args);
-        testExtractWord(args);
+        //testExtractWord(args);
+        testExtractWords(args);
     }
     /**
      * ²âÊÔµ¥¸ö¾ä×Ó
@@ -112,9 +114,10 @@ public class SegTest {
      */
     public static void testExtractWords(String[] args) {
         Config.DEBUG_MODE = true;
-
         Segment segment = new Segment();
-        //System.out.println("³é´Ê½á¹û----->" + segment.extractWords(args[0]) + "<---");
+        Jedis  redis  = new Jedis("localhost");
+        redis.auth("root");
+        System.out.println("³é´Ê½á¹û----->" + segment.extractWords(args[0]) + "<---");
     }
 
 
