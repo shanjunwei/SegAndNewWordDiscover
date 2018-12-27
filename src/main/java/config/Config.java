@@ -14,16 +14,18 @@ public class Config {
     public static int MAX_WORD_LEN = 5 + 1;  // 分词最大长度为6
     public static float ENTROPY_THETA = 0.4f;  // 左右信息熵比值过滤  之前采用0.78 现在试试0.44
     public static float MI_THRESHOLD_VALUE = 1.0f;  // 互信息过滤阈值,之前用的0.89
-    public static final int MAX_WORD_COUNT = 1;  // 分词最小词频
+    public static final int MIN_WORD_COUNT = 1;  // 分词最小词频阈值
     public static final float beta = 0.51f;  // 置信度 β
     public static float MIN_LEFT_ENTROPY = 0.01f;   // 最小左熵,用于左邻熵过滤
     public static float MIN_RIGHT_ENTROPY = 0.01f;   // 最小右熵,用于右邻熵过滤
     public static String CORPUS_INPUT_PATH = "data\\test-text.txt"; // 语料入口
-    //public static String segTermMapPath = "data\\segTermMap.txt";   //序列化文件输出路径
     public static String ErrorSegPath = "data/error_seg.txt"; // 切分错误的行记录
     public static final String trailSerailPath = "data/trail_save.txt"; // 切分错误的行记录
-    public static String REDIS_AUTH_PASSWORD = "root"; // redis验证的密码
     public static boolean DEBUG_MODE = false;   //分词DEBUG 模式
+    public static int WC_THREAD_NUM = 10;   //  线程数
+
+    public static String REDIS_HOST = "localhost";
+    public static String REDIS_AUTH_PASSWORD = "root"; // redis验证的密码
 
     /**
      * 切分段去重后 总互信息
@@ -42,7 +44,7 @@ public class Config {
     /**
      * 切分段去重后 最大互信息
      */
-    public static  final float maxMI = 1123.5605f;
+    public static final float maxMI = 1123.5605f;
     /**
      * 切分段去重后  最大左熵
      */
@@ -62,9 +64,12 @@ public class Config {
             MAX_WORD_LEN = Integer.valueOf(p.getProperty("MAX_WORD_LEN", String.valueOf(MAX_WORD_LEN)));
             MIN_LEFT_ENTROPY = Float.valueOf(p.getProperty("MIN_LEFT_ENTROPY", String.valueOf(MIN_LEFT_ENTROPY)));
             MIN_RIGHT_ENTROPY = Float.valueOf(p.getProperty("MIN_RIGHT_ENTROPY", String.valueOf(MIN_RIGHT_ENTROPY)));
-            REDIS_AUTH_PASSWORD = p.getProperty("REDIS_AUTH_PASSWORD", REDIS_AUTH_PASSWORD);  // redis 密码
             CORPUS_INPUT_PATH = p.getProperty("CORPUS_INPUT_PATH", CORPUS_INPUT_PATH);
             DEBUG_MODE = Boolean.valueOf(p.getProperty("DEBUG_MODE", String.valueOf(DEBUG_MODE)));
+            WC_THREAD_NUM = Integer.valueOf(p.getProperty("WC_THREAD_NUM", String.valueOf(WC_THREAD_NUM)));
+
+            REDIS_AUTH_PASSWORD = p.getProperty("REDIS_AUTH_PASSWORD", REDIS_AUTH_PASSWORD);  // redis 密码
+            REDIS_HOST = p.getProperty("REDIS_HOST", REDIS_HOST);  // redis 服务地址
         } catch (Exception e) {
             e.printStackTrace();
         }

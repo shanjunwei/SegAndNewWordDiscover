@@ -11,6 +11,8 @@ import static config.Constants.stopWordSet;
 
 /**
  * 数据预处理
+ *
+ * 主要是做词频统计
  */
 public class PreProcess {
     public void initData() {   // 数据预处理,针对人民日报语料做一些修改

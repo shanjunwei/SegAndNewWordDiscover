@@ -10,12 +10,14 @@ import net.sourceforge.pinyin4j.format.HanyuPinyinToneType;
 import net.sourceforge.pinyin4j.format.exception.BadHanyuPinyinOutputFormatCombination;
 import org.apache.commons.lang.StringUtils;
 import pojo.Term;
+import redis.clients.jedis.Jedis;
+
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import static config.Config.MAX_WORD_LEN;
-import static config.Constants.singWordCountMap;
-import static config.Constants.wcMap;
+import static config.Constants.*;
 
 /**
  * 汉字处理相关工具类
@@ -52,18 +54,6 @@ public class HanUtils {
             return false;
         }
     }
-
-
-    /**
-     * 判断两个字符串首字符是否相等
-     */
-    public static boolean hasCommonFirstCharacter(String str1, String str2) {
-        if (StringUtils.isBlank(str1) || StringUtils.isBlank(str2)) {
-            return false;
-        }
-        return str1.substring(0, 1).equals(str2.substring(0, 1));
-    }
-
 
     /**
      * 取中文词汇转换成拼音    如 张三丰 ->  zhangshanfeng
@@ -113,7 +103,7 @@ public class HanUtils {
             }
         }
         String temp = stringBuilder.toString().replaceAll("\\s{1,}", " ");
-        temp =  temp.trim();    // 去首尾空格
+        temp = temp.trim();    // 去首尾空格
         String[] seg_nonChinese_result = temp.split(" ");
         return seg_nonChinese_result;
     }
@@ -246,41 +236,6 @@ public class HanUtils {
     }
 
 
-    /**
-     * 去掉停用词,将待分词串以停用词分割 从高到低取词
-     */
-   /* public static String[] segmentByStopWordsDes(String text) {
-        if (text.length() == 1) {
-            return " ".split(" ");    // 返回结果为 {}
-        }
-        int temp_max_len = Math.min(text.length() + 1, MAX_STOP_WORD_LEN);
-        int p = 0;
-        while (p < text.length()) {
-            int q = temp_max_len;
-            while (q > 0) {  // 控制取词的长度
-                // 取词串  p --> p+q
-                if (p + q > text.length()) {
-                    q--;    // 尝试下去，分全
-                    continue;
-                }
-                String strChar = text.substring(p, p + q);
-                if (stopWordSet.contains(strChar)) {  //|| strChar.contains(",")
-                    // System.out.println("==>" + strChar);
-                    text = text.replaceAll(strChar, ",");
-                    p++;
-                    q = temp_max_len;
-                    continue;  // 停用词略过
-                }
-                q--;
-            }
-            p++;
-        }
-
-        String temp = text.replaceAll("[,]+", ",");  // 对多个非分词字符进行合并处理
-        String[] seg_stop_result = temp.split(",");
-        return seg_stop_result;
-    }
-*/
     // 切分词  FMM 算法
     public static void FMMSegment(String text, boolean countWordFrequency) {
         // 额外统计单个字的词频
@@ -315,6 +270,7 @@ public class HanUtils {
             p++;
         }
     }
+
     // 切分词  FMM 算法
     public static List<String> getFMMList(String text, boolean countWordFrequency) {
         // 额外统计单个字的词频
@@ -356,6 +312,36 @@ public class HanUtils {
     }
 
 
+    // 切分词  FMM 算法
+    public static void FMMAndSaveWCToRedis(String text, Jedis jedis) {
+        if (StringUtils.isBlank(text)) return;
+        wordCountSingleWordAndSaveToRedis(text, jedis);   // 额外统计单个字的词频
+        if (text.length() == 1) {
+            return;
+        }
+        int temp_max_len = Math.min(text.length() + 1, MAX_WORD_LEN);
+        int p = 0;
+        while (p < text.length()) {
+            int q = 1;
+            while (q < temp_max_len) {  // 控制取词的长度
+                if (q == 1) {
+                    q++;
+                    continue;  // 长度为1略过,单个汉字不具有分词意义
+                }
+                // 取词串  p --> p+q
+                if (p + q > text.length()) {
+                    break;
+                }
+                String strChar = text.substring(p, p + q);
+                // 统计词串的词频
+                jedis.zincrby(REDIS_WC_KEY, 1, strChar);
+                q++;
+            }
+            p++;
+        }
+    }
+
+
     // 切分词  FMM 算法 ,不取一个字的候选串
     public static List<Term> segmentToTerm(String text, boolean countWordFrequency) {
         //  送进来的切先以停用词切分
@@ -394,7 +380,6 @@ public class HanUtils {
         return termList;
     }
 
-
     public static void wordCountSingleWord(String text) {
         char[] chars = text.toCharArray();
         for (char singleWord : chars) {
@@ -406,34 +391,12 @@ public class HanUtils {
         }
     }
 
-
-    // 判断待添加进最终结果集的 分词是否与之前的重合
-
-    // 判断的逻辑再更改,判断重叠应该引入词在原来语句中的位置
-    public static boolean hasNonCommonWithAllAddedResultSet(LinkedHashSet AddedResultSet, String key) {
-        Iterator<String> iterator = AddedResultSet.iterator();
-        while (iterator.hasNext()) {
-            if (hasCommonStr(key, iterator.next(), false)) {    // 这里的逻辑有误--> 应该是与之前加入结果集任何字符串都不重合
-                return false;
-            }
+    //  统计词频并将结果存储到redis
+    public static void wordCountSingleWordAndSaveToRedis(String text, Jedis jedis) {
+        char[] chars = text.toCharArray();
+        for (char singleWord : chars) {
+            jedis.zincrby(REDIS_WC_SINGLEWORD_KEY, 1, String.valueOf(singleWord));
         }
-        return true;
-    }
-
-
-    // 判断两个字符串是否有交集
-    public static boolean hasCommonStr(String str1, String str2, boolean isFirstTimeScreen) {  // 控制参数，是否是第一轮筛选
-        char[] chars = str1.toCharArray();
-        // 共头的不算有交集
-        if (!isFirstTimeScreen && str1.substring(0, 1).equals(str2.substring(0, 1))) {  // 第二轮筛选共头的不算有交集
-            return false;
-        }
-        for (int i = 0; i < chars.length; i++) {
-            if (str2.contains(chars[i] + "")) {
-                return true;
-            }
-        }
-        return false;
     }
 
     public static boolean hasNonCommonWithAllAddedResultSet(List<Term> AddedResultSet, Term key) {
@@ -563,3 +526,40 @@ public class HanUtils {
         return result;
     }
 }
+
+
+/**
+ * 去掉停用词,将待分词串以停用词分割 从高到低取词
+ */
+   /* public static String[] segmentByStopWordsDes(String text) {
+        if (text.length() == 1) {
+            return " ".split(" ");    // 返回结果为 {}
+        }
+        int temp_max_len = Math.min(text.length() + 1, MAX_STOP_WORD_LEN);
+        int p = 0;
+        while (p < text.length()) {
+            int q = temp_max_len;
+            while (q > 0) {  // 控制取词的长度
+                // 取词串  p --> p+q
+                if (p + q > text.length()) {
+                    q--;    // 尝试下去，分全
+                    continue;
+                }
+                String strChar = text.substring(p, p + q);
+                if (stopWordSet.contains(strChar)) {  //|| strChar.contains(",")
+                    // System.out.println("==>" + strChar);
+                    text = text.replaceAll(strChar, ",");
+                    p++;
+                    q = temp_max_len;
+                    continue;  // 停用词略过
+                }
+                q--;
+            }
+            p++;
+        }
+
+        String temp = text.replaceAll("[,]+", ",");  // 对多个非分词字符进行合并处理
+        String[] seg_stop_result = temp.split(",");
+        return seg_stop_result;
+    }
+*/

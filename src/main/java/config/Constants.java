@@ -1,10 +1,18 @@
 package config;
+
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
 import trie.bintrie.BinTrie;
 import util.FileUtils;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedTransferQueue;
+
+import static config.Config.REDIS_HOST;
 
 /**
  * 常量
@@ -26,12 +34,18 @@ public class Constants {
     /**********************  redis->  Term对象属性值 **************************/
 
     public static boolean NovelTest = false;   // 是测试小说还是人民日报语料,默认的是人名日报
-    public static String NOVEL;
     public static HashSet stopWordSet = new HashSet();     // 停用词哈希表
     //连接本地的 Redis 服务
-    public static Jedis redis = null;   // redis client，由外部传入
     public static Map<String, Integer> wcMap = new HashMap<>(1000000);   // 用于存储切分结果和统计词频
     public static Map<String, Integer> singWordCountMap = new ConcurrentHashMap<>(100000);   // 单字词频
+    public static LinkedTransferQueue<String> transferQueue = new LinkedTransferQueue();    // 阻塞队列,用来实现并发加速框架
+    public static int QUEUE_SIZE = 0;
+
+    /**********************  redis 相关静态变量 **************************/
+    public static final JedisPool REDIS_POOL = new JedisPool(new JedisPoolConfig(), REDIS_HOST);   // 不能在多个线程中使用一个redis实例
+    public static final String REDIS_WC_SINGLEWORD_KEY = "singleWordMap";
+    public static final String REDIS_WC_KEY = "wcMap";
+
 
     //public static Map<String, Term> segTermMap = new HashMap<>(1000000);   //用于统计量归一化计算,占用内存空间太大，准备弃用
 /*    public static final List<Float> LElist = new ArrayList<>();   //左熵

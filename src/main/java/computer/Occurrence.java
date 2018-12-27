@@ -1,6 +1,7 @@
 package computer;
 
 import pojo.Term;
+import redis.clients.jedis.Jedis;
 import util.HanUtils;
 
 import java.util.List;
@@ -14,18 +15,17 @@ import static config.Constants.*;
  * 词共现 统计量计算,包括 互信息,左右熵
  */
 public class Occurrence {
+    private Jedis redis = new Jedis(REDIS_HOST);
     /**
      * 全部 切分 数量
      */
     long totalTerm;
-
     /**
      * 切分段 去重后频数累计和
      */
     static long totalCount;
-
-
     public Occurrence() {
+        redis.auth(REDIS_AUTH_PASSWORD);
     }
 
     /**
@@ -46,13 +46,13 @@ public class Occurrence {
             String seg = entry.getKey();
             int seg_count = entry.getValue();
             // 1. 计算信息熵
-            float rightEntropy = computeRightEntropy(seg,seg_count);
-           // maxRE = Math.max(maxRE, rightEntropy);  // 求最大右信息熵   //totalRE = totalRE + rightEntropy;
-            float leftEntropy = computeLeftEntropy(seg,seg_count);
-        //    maxLE = Math.max(maxLE, leftEntropy);  // 求最大左信息熵    // totalLE = totalLE + leftEntropy;
+            float rightEntropy = computeRightEntropy(seg, seg_count);
+            // maxRE = Math.max(maxRE, rightEntropy);  // 求最大右信息熵   //totalRE = totalRE + rightEntropy;
+            float leftEntropy = computeLeftEntropy(seg, seg_count);
+            //    maxLE = Math.max(maxLE, leftEntropy);  // 求最大左信息熵    // totalLE = totalLE + leftEntropy;
             // 2. 计算互信息
             float mi = computeMutualInformation(seg);
-        //    maxMI = Math.max(maxMI, mi);   // 计算最大互信息  //totalMI = totalMI + mi;
+            //    maxMI = Math.max(maxMI, mi);   // 计算最大互信息  //totalMI = totalMI + mi;
             Term term = new Term(seg, seg_count, mi, leftEntropy, rightEntropy);  // 这里没办法算最后得分
             // 将map存入redis中
             /**********************  redis存取 **************************/
