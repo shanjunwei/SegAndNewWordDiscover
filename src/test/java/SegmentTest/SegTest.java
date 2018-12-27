@@ -117,7 +117,7 @@ public class SegTest {
         Segment segment = new Segment();
         Jedis  redis  = new Jedis("localhost");
         redis.auth("root");
-        System.out.println("抽词结果----->" + segment.extractWords(args[0]) + "<---");
+        //System.out.println("抽词结果----->" + segment.extractWords(args[0]) + "<---");
     }
 
 

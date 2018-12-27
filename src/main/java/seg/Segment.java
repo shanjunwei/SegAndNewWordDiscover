@@ -1,43 +1,22 @@
 package seg;
 
 import computer.Occurrence;
-import config.Config;
 import config.Constants;
 import org.apache.commons.lang.StringUtils;
 import pojo.Term;
 import redis.clients.jedis.Jedis;
-import serilize.JsonSerializationUtil;
 import util.HanUtils;
-
 import java.util.*;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-
 import static config.Config.DEBUG_MODE;
-import static config.Constants.*;
+import static config.Constants.HAS_SPECIAL_CHAR;
+import static config.Constants.STR_REPLACE_SPECIAL;
 
 /**
  * 基于互信息 和信息熵的分词与新词发现
  */
 public class Segment {
-    // 数据预处理先做
-    //  static {
-    //JsonSerializationUtil.serilizableStatisticsToFile();    // 序列化计算结果
-    //JsonSerializationUtil.deserilizableStatistics();    // 反序列化
-    //JsonSerializationUtil.loadTrieFromFile();  // 反序列化字典树
-    //  }
-
-
     public Segment() {
     }
-
-    public Segment(Jedis client) {
-        redis = client;   // 接收外部传入的redis实例
-        Config.maxMI = Float.valueOf(redis.hget(MAX_KEY, MI));
-        Config.maxLE = Float.valueOf(redis.hget(MAX_KEY, LE));
-        Config.maxRE = Float.valueOf(redis.hget(MAX_KEY, RE));
-    }
-
     /**
      * 暴露给外部调用的分词接口
      * 传进来的参数 没有非中文字符，是一个句子
@@ -75,8 +54,8 @@ public class Segment {
      * 暴露给外部调用的 抽词 接口 TODO*****
      * 传进来的是一句话,里面可能包含非中文字符
      */
-    public String extractWords(String text) {
-        long t1 = System.currentTimeMillis();
+    public static String extractWords(String text, Jedis jedis) {
+        //long t1 = System.currentTimeMillis();
         if (StringUtils.isBlank(text)) return text;
         // 将字符串以非中文字符切割成片段
         String[] array = HanUtils.replaceNonChineseCharacterAsBlank(text);
@@ -86,16 +65,14 @@ public class Segment {
                 exactWords.append(" " + str);
             } else {
                 List<Term> termList = HanUtils.segmentToTerm(str, false);
-                List<Term> result = extractWordsFromNGram(termList);
+                List<Term> result = extractWordsFromNGram(termList,jedis);
                 for (Term term : result) {
                     exactWords.append(" " + term);
                 }
             }
         }
-       // System.out.println("———> " + exactWords.toString().trim() + "    cost: " + (System.currentTimeMillis() - t1) + " ms");
         return exactWords.toString().trim();
     }
-
     /**
      * //TODO  年份识别
      * 暴露给外部调用的分词接口
@@ -110,25 +87,106 @@ public class Segment {
         if (termList == null) {    //  单独一个字的
             exactWords.add(new Term(text, 0, text.length()));
         } else {
-            List<Term> result = extractWordsFromNGram(termList);
+            List<Term> result = extractWordsFromNGram(termList,null);
             exactWords.addAll(result);
         }
         text = HanUtils.handleSentenceWithExtractWords(text, exactWords);  //  先处理抽词
         return text;
     }
 
-    public static void main(String[] args) {
-        Constants.NovelTest = true;
-        Segment segment = new Segment();
-        segment.segmentWithAllChinese("国家主席孙少平国家读者主席孙少平");
-    }
 
     /**
-     * //TODO  年份识别
-     * 暴露给外部调用的分词接口
+     * 原字符串长度  s指挥警察四处奔忙  取候选集前根号len(s)个  ,s为待FMM 切分串
+     *
+     * @param termList 候选集   FMM 切分串
+     * @return 置信度过滤， 过滤的结果无交集
+     */
+    public static List<Term> extractWordsFromNGram(List<Term> termList, Jedis jedis) {
+        // 将切分结果集分为以首字符区分的若干组
+        List<List<Term>> teams = new ArrayList<>();  //  分组集合   //List<String> seg_list = new ArrayList<>(termList);
+        int p = 0;
+        String history = termList.get(0).getSeg().substring(0, 1);
+        String seg = termList.get(0).getSeg();
+        String firstChar = seg.substring(0, 1);  // 首字符
+        while (p < termList.size()) {
+            List<Term> seg_team = new ArrayList<>();
+            while (firstChar.equals(history)) {
+                seg_team.add(termList.get(p));
+                p++;
+
+                if (p >= termList.size()) break;
+                firstChar = termList.get(p).getSeg().substring(0, 1);
+            }
+            teams.add(seg_team);
+            if (p >= termList.size()) break;
+            history = termList.get(p).getSeg().substring(0, 1);
+        }
+        // 每个组挑选一个候选对象  方法是每组倒序排列
+        Map<String, Float> segScoreMap = new HashMap<>();   //  将局部得分保存在局部Map里面
+        List<Term> result_list = new ArrayList<>();
+        teams.forEach(list -> {
+            Term topCandidateFromSet = getTopCandidateFromSet(list, segScoreMap, jedis);   // 第一轮决策
+            if (topCandidateFromSet != null && StringUtils.isNotBlank(topCandidateFromSet.getSeg())) {
+                result_list.add(topCandidateFromSet);
+            }
+        });
+        // 排序
+        //if (DEBUG_MODE) System.out.println("第二轮筛选前: " + result_list);
+        // result_list.sort((o1, o2) -> Double.compare(Double.valueOf(redis.hget(o2.seg, SCORE)), Double.valueOf(redis.hget(o1.seg, SCORE))));
+        result_list.sort((o1, o2) -> Float.compare(segScoreMap.get(o2.seg), segScoreMap.get(o1.seg)));
+       // if (DEBUG_MODE) System.out.println("第二轮排序后——————————> " + result_list);
+        List<Term> final_result = new ArrayList<>();
+        for (int i = 0; i < result_list.size(); i++) {
+            if (final_result.isEmpty()) {
+                final_result.add(result_list.get(0));
+            }
+            if (HanUtils.hasNonCommonWithAllAddedResultSet(final_result, result_list.get(i))) {
+                final_result.add(result_list.get(i));
+            }
+        }
+        final_result.sort(Comparator.comparing(term -> term.getLeftBound()));       // 结果再按照原来的位置排序
+        //if (DEBUG_MODE) System.out.println("抽词###########——————————> " + final_result);
+        return final_result;
+    }
+
+    //  第一轮筛选
+    private static Term getTopCandidateFromSet(List<Term> termList, Map<String, Float> segScoreMap, Jedis jedis) {
+        //if (DEBUG_MODE) System.out.println("   第一轮筛选前->   " + termList + "\n");
+        List<Term> result = new ArrayList<>();
+        Occurrence occurrence = new Occurrence();
+        // 计算候选词的 互信息 和 信息熵
+        for (Term seg : termList) {
+            //Term term = segTermMap.get(seg.seg);
+            Term term = Term.getTermObjectFromMap(jedis.hgetAll(seg.seg));   // 从redis中读取
+            if (term != null) {
+                // 信息熵过滤
+                if (occurrence.EntropyFilter(term.le, term.re)) { // 过滤掉信息熵过滤明显不是词的
+                  //  if (DEBUG_MODE)
+                  //      System.out.println("信息熵过滤-> " + seg + "   mi->   " + term.mi + " le->" + term.le + " re->" + term.re);
+                }
+                // 互信息过滤
+                else if (occurrence.MutualInformationFilter(term.mi)) {
+                   // if (DEBUG_MODE)
+                    //    System.out.println("互信息过滤-> " + seg + "   mi->   " + term.mi + " le->" + term.le + " re->" + term.re);
+                } else {
+                    float score = occurrence.getNormalizedScore(term);
+                    segScoreMap.put(seg.seg, score);   // 局部赋值到map
+                    //redis.hset(seg.seg, SCORE, String.valueOf(score));  // 修改某一属性值
+                    result.add(seg);
+                }
+            }
+        }
+        // 对候选集根据 归一化得分 降序排列
+        result.sort((o1, o2) -> Float.compare(segScoreMap.get(o2.seg), segScoreMap.get(o1.seg)));
+       // if (DEBUG_MODE) System.out.println("   第一轮排序后*****->   " + result + "\n");
+        return result.size() == 0 ? null : result.get(0);
+    }
+
+}
+    /**
      * 传进来的参数 没有非中文字符，一个句子
      */
-    public String segmentByNonChineseFilter(String text) {
+    /*public String segmentByNonChineseFilter(String text) {
         if (StringUtils.isBlank(text)) return "";
 
         String[] replaceNonChinese = HanUtils.replaceNonChineseCharacterAsBlank(text);
@@ -142,7 +200,7 @@ public class Segment {
                 if (termList == null) {    //  单独一个字的
                     exactWords.add(new Term(textDS, 0, textDS.length()));
                 } else {
-                    List<Term> result = extractWordsFromNGram(termList);
+                    List<Term> result = extractWordsFromNGram(termList,null);
                     exactWords.addAll(result);
                 }
             }
@@ -164,113 +222,4 @@ public class Segment {
         // 还原
         if (hasSpecialCharacter) text = HanUtils.getOriginalStr(text);
         return text;
-    }
-
-    /**
-     * 原字符串长度  s指挥警察四处奔忙  取候选集前根号len(s)个  ,s为待FMM 切分串
-     *
-     * @param termList 候选集   FMM 切分串
-     * @return 置信度过滤， 过滤的结果无交集
-     */
-    public List<Term> extractWordsFromNGram(List<Term> termList) {
-        // 将切分结果集分为以首字符区分的若干组
-        List<List<Term>> teams = new ArrayList<>();  //  分组集合   //List<String> seg_list = new ArrayList<>(termList);
-        int p = 0;
-        String history = termList.get(0).getSeg().substring(0, 1);
-        String seg = termList.get(0).getSeg();
-        String firstChar = seg.substring(0, 1);  // 首字符
-        while (p < termList.size()) {
-            List<Term> seg_team = new ArrayList<>();
-            while (firstChar.equals(history)) {
-                seg_team.add(termList.get(p));
-                p++;
-
-                if (p >= termList.size()) break;
-                firstChar = termList.get(p).getSeg().substring(0, 1);
-            }
-            teams.add(seg_team);
-            if (p >= termList.size()) break;
-            history = termList.get(p).getSeg().substring(0, 1);
-        }
-        // 每个组挑选一个候选对象  方法是每组倒序排列
-        Map<String, Float> segScoreMap = new HashMap<>();
-        List<Term> result_list = new ArrayList<>();
-        teams.forEach(list -> {
-            Term topCandidateFromSet = getTopCandidateFromSet(list, segScoreMap);   // 第一轮决策
-            if (topCandidateFromSet != null && StringUtils.isNotBlank(topCandidateFromSet.getSeg())) {
-                result_list.add(topCandidateFromSet);
-            }
-        });
-        // 排序
-        if (DEBUG_MODE) System.out.println("第二轮筛选前: " + result_list);
-        // result_list.sort((o1, o2) -> Double.compare(Double.valueOf(redis.hget(o2.seg, SCORE)), Double.valueOf(redis.hget(o1.seg, SCORE))));
-        result_list.sort((o1, o2) -> Float.compare(segScoreMap.get(o2.seg), segScoreMap.get(o1.seg)));
-        if (DEBUG_MODE) System.out.println("第二轮排序后——————————> " + result_list);
-        List<Term> final_result = new ArrayList<>();
-        for (int i = 0; i < result_list.size(); i++) {
-            if (final_result.isEmpty()) {
-                final_result.add(result_list.get(0));
-            }
-            if (HanUtils.hasNonCommonWithAllAddedResultSet(final_result, result_list.get(i))) {
-                final_result.add(result_list.get(i));
-            }
-        }
-        final_result.sort(Comparator.comparing(term -> term.getLeftBound()));       // 结果再按照原来的位置排序
-        if (DEBUG_MODE) System.out.println("抽词###########——————————> " + final_result);
-        return final_result;
-    }
-
-    //  第一轮筛选
-    private Term getTopCandidateFromSet(List<Term> termList, Map<String, Float> segScoreMap) {
-        // Lock lock=new ReentrantLock();  // 保证redis 写线程安全
-        if (DEBUG_MODE) System.out.println("   第一轮筛选前->   " + termList + "\n");
-        List<Term> result = new ArrayList<>();
-        Occurrence occurrence = new Occurrence();
-        // 计算候选词的 互信息 和 信息熵
-        for (Term seg : termList) {
-            //Term term = segTermMap.get(seg.seg);
-            Term term = Term.getTermObjectFromMap(redis.hgetAll(seg.seg));   // 从redis中读取
-            if (term != null) {
-                // 信息熵过滤
-                if (occurrence.EntropyFilter(term.le, term.re)) { // 过滤掉信息熵过滤明显不是词的
-                    if (DEBUG_MODE)
-                        System.out.println("信息熵过滤-> " + seg + "   mi->   " + term.mi + " le->" + term.le + " re->" + term.re);
-                }
-                // 互信息过滤
-                else if (occurrence.MutualInformationFilter(term.mi)) {
-                    if (DEBUG_MODE)
-                        System.out.println("互信息过滤-> " + seg + "   mi->   " + term.mi + " le->" + term.le + " re->" + term.re);
-                } else {
-                    float score = occurrence.getNormalizedScore(term);
-                    // lock.lock();
-                    segScoreMap.put(seg.seg, score);   // 局部赋值到map
-                    //redis.hset(seg.seg, SCORE, String.valueOf(score));  // 修改某一属性值
-                    //  lock.unlock();
-                    // term.setScore(score);   // 赋值
-                    result.add(seg);
-                }
-            }
-        }
-        // 对候选集根据 归一化得分 降序排列
-        // result.sort((o1, o2) -> Double.compare(Double.valueOf(redis.hget(o2.seg, SCORE)), Double.valueOf(redis.hget(o1.seg, SCORE))));
-        result.sort((o1, o2) -> Float.compare(segScoreMap.get(o2.seg), segScoreMap.get(o1.seg)));
-        if (DEBUG_MODE) System.out.println("   第一轮排序后*****->   " + result + "\n");
-        return result.size() == 0 ? null : result.get(0);
-    }
-
-}
-
-
- /*       if (termList.size() == 1 && termList.get(0).getSeg().length() == 1) {    // 一个的也计算统计量
-            Term seg = termList.get(0);
-            Term term = segTermMap.get(seg);
-            float score = occurrence.getNormalizedScore(term);
-            if (term == null) {
-                Term term1 = new Term();
-                term1.setScore(score);
-                segTermMap.put(seg.getSeg(), term1);
-            } else {
-                term.setScore(score);   // 赋值
-            }
-            return termList.get(0);
-        }*/
+    }*/

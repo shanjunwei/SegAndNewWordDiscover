@@ -42,15 +42,15 @@ public class Config {
     /**
      * 切分段去重后 最大互信息
      */
-    public static float maxMI = 0f;
+    public static  final float maxMI = 1123.5605f;
     /**
      * 切分段去重后  最大左熵
      */
-    public static float maxLE = 0f;
+    public static final float maxLE = 5.094753f;
     /**
      * 切分段去重后  最大右熵
      */
-    public static float maxRE = 0f;
+    public static final float maxRE = 5.173816f;
 
     static {
         /****************************************** 读取配置文件 ************************************************/
