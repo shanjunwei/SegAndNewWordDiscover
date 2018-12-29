@@ -44,7 +44,7 @@ public class PreProcess {
 
     public void initNovel() {   // 数据预处理,针对人民日报语料做一些修改
         // 读取小说文本
-        String novel = FileUtils.readFileToString(Config.CORPUS_INPUT_PATH);
+        String novel = FileUtils.readFileToString(Config.NOVEL_INPUT_PATH);
         String[] replaceNonChinese = HanUtils.replaceNonChineseCharacterAsBlank(novel);  // 去掉非中文字符   里边没有逗号
         // 再拆分停用词
         for (int i = 0; i < replaceNonChinese.length; i++) {

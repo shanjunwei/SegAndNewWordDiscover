@@ -1,6 +1,5 @@
 package util;
 
-
 import computer.Occurrence;
 import config.Constants;
 import net.sourceforge.pinyin4j.PinyinHelper;
@@ -257,14 +256,7 @@ public class HanUtils {
                     break;
                 }
                 String strChar = text.substring(p, p + q);
-                // 统计词串的词频
-                if (countWordFrequency) {
-                    if (wcMap.containsKey(strChar)) {
-                        wcMap.put(strChar, wcMap.get(strChar) + 1);
-                    } else {
-                        wcMap.put(strChar, 1);
-                    }
-                }
+                if (countWordFrequency) wordCount(strChar);    // 统计词串的词频
                 q++;
             }
             p++;
@@ -295,15 +287,9 @@ public class HanUtils {
                     break;
                 }
                 String strChar = text.substring(p, p + q);
-                result.add(strChar);
                 // 统计词串的词频
-                if (countWordFrequency) {
-                    if (wcMap.containsKey(strChar)) {
-                        wcMap.put(strChar, wcMap.get(strChar) + 1);
-                    } else {
-                        wcMap.put(strChar, 1);
-                    }
-                }
+                if (countWordFrequency) wordCount(strChar);    // 统计词串的词频
+                result.add(strChar);
                 q++;
             }
             p++;
@@ -363,16 +349,9 @@ public class HanUtils {
                     break;
                 }
                 String strChar = text.substring(p, p + q);
+                if (countWordFrequency) wordCount(strChar);    // 统计词串的词频
                 Term term = new Term(strChar, p, p + q);
                 termList.add(term);
-                // 统计词串的词频
-                if (countWordFrequency) {
-                    if (wcMap.containsKey(strChar)) {
-                        wcMap.put(strChar, wcMap.get(strChar) + 1);
-                    } else {
-                        wcMap.put(strChar, 1);
-                    }
-                }
                 q++;
             }
             p++;
@@ -383,11 +362,25 @@ public class HanUtils {
     public static void wordCountSingleWord(String text) {
         char[] chars = text.toCharArray();
         for (char singleWord : chars) {
-            if (!singWordCountMap.containsKey(String.valueOf(singleWord))) {
+            String key = String.valueOf(singleWord);
+           /* if (!singWordCountMap.containsKey(String.valueOf(singleWord))) {
                 singWordCountMap.put(String.valueOf(singleWord), 1);
             } else {
                 singWordCountMap.put(String.valueOf(singleWord), singWordCountMap.get(String.valueOf(singleWord)) + 1);
-            }
+            }*/
+            wordCount(key);
+        }
+    }
+
+    /**
+     * 词频统计基础方法
+     */
+    public static void wordCount(String text) {
+        if (StringUtils.isBlank(text)) return;
+        if (wcMap.containsKey(text)) {
+            wcMap.put(text, wcMap.get(text) + 1);
+        } else {
+            wcMap.put(text, 1);
         }
     }
 
@@ -395,7 +388,7 @@ public class HanUtils {
     public static void wordCountSingleWordAndSaveToRedis(String text, Jedis jedis) {
         char[] chars = text.toCharArray();
         for (char singleWord : chars) {
-            jedis.zincrby(REDIS_WC_SINGLEWORD_KEY, 1, String.valueOf(singleWord));
+            jedis.zincrby(REDIS_WC_KEY, 1, String.valueOf(singleWord));
         }
     }
 

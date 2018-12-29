@@ -24,6 +24,7 @@ public class Occurrence {
      * 切分段 去重后频数累计和
      */
     static long totalCount;
+
     public Occurrence() {
         redis.auth(REDIS_AUTH_PASSWORD);
     }
@@ -94,23 +95,28 @@ public class Occurrence {
      * 信息熵计算
      */
     private float computeEntropy(Set<Map.Entry<String, Integer>> entrySet, String prefix, int prefix_count) {
-        float totalFrequency = 0;
+      //  float totalFrequency = 0;
       /*  for (Map.Entry<String, Integer> entry : entrySet) {
             if (entry.getKey().length() != prefix.length() + 1) {
                 continue;
             }
             totalFrequency += entry.getValue();
         }*/
-        totalFrequency = prefix_count;
+       // totalFrequency = prefix_count;
         float le = 0;
         for (Map.Entry<String, Integer> entry : entrySet) {
             if (entry.getKey().length() != prefix.length() + 1) {
                 continue;
             }
-            float p = entry.getValue() / totalFrequency;
-            le += -p * Math.log(p);
+            float p = (float)entry.getValue() / (float) prefix_count;
+            le += -p * (Math.log(p) / Math.log(2));
         }
+        System.out.println(prefix + "信息熵:" + le);
         return le;
+    }
+
+    public static void main(String[] args) {
+        System.out.println(12.0/13.0);
     }
 
 
