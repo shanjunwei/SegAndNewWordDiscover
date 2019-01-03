@@ -1,18 +1,22 @@
 package SegmentTest;
 
+import concurrent_compute.MIERConCompute;
+import concurrent_compute.WordCountConCompute;
 import config.Config;
 import config.Constants;
 import org.apache.commons.lang.StringUtils;
 import redis.clients.jedis.Jedis;
 import seg.Segment;
 import serilize.JsonSerializationUtil;
+
 import java.io.*;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import static config.Config.REDIS_AUTH_PASSWORD;
-import static config.Config.REDIS_HOST;
+
+import static config.Config.*;
 import static config.Constants.REDIS_WC_KEY;
+import static config.Constants.wcMap;
 
 /**
  * 分词测试类
@@ -30,11 +34,25 @@ public class SegTest {
         //saveCalculateResultToRedis();    // 重新序列化计算结果到redis
         //testExtractWords(args);   // 测试抽词
         //testSerializateTrieToFile();
-        testRediSave(args);
+        //testRediSave(args);
         //testExtractWord(args);
         //testExtractWords(args);
         //testRedisWordCount();
         //testCommonWordCount();
+        testConCompute();
+    }
+
+    public static void testConCompute() {
+        long t1 = System.currentTimeMillis();
+        CHINA_DAILY_TEST = true;
+        //  词频统计 保存结果到内存
+        WordCountConCompute wordCountConCompute = new WordCountConCompute();
+        wordCountConCompute.compute();
+        System.out.println("  词频统计里 wcMap 的容量:" + wcMap.size());
+        // 并发计算统计量
+        MIERConCompute mierConCompute = new MIERConCompute();
+        mierConCompute.compute();
+        System.out.println("总耗时" + (System.currentTimeMillis() - t1) + " ms");
     }
 
     public static void testCommonWordCount() {
@@ -43,7 +61,7 @@ public class SegTest {
         preProcess.initNovel();
         System.out.println("总共候选词串"+Constants.wcMap.size());
         System.out.println("总耗时"+(System.currentTimeMillis()-t1) +" ms");*/
-        Jedis jedis = new Jedis(REDIS_HOST,6379,100000);
+        Jedis jedis = new Jedis(REDIS_HOST, 6379, 100000);
         jedis.auth(REDIS_AUTH_PASSWORD);
 //        jedis.zrevrangeWithScores(REDIS_WC_KEY, 0, 200000).forEach(it -> {
 //            System.out.println(it.getElement() + " -> " + it.getScore());
@@ -172,13 +190,13 @@ public class SegTest {
      * 测试redis的词频统计
      */
     public static void testRedisWordCount() {
-      //  long t1 = System.currentTimeMillis();
+        //  long t1 = System.currentTimeMillis();
         Jedis jedis = new Jedis(REDIS_HOST);
         jedis.auth(REDIS_AUTH_PASSWORD);
         jedis.zrevrangeWithScores(REDIS_WC_KEY, 0, 200000).forEach(it -> {
             System.out.println(it.getElement() + " -> " + it.getScore());
         });
-      //  System.out.println("总计耗时:  " + (System.currentTimeMillis() - t1) + " ms");
+        //  System.out.println("总计耗时:  " + (System.currentTimeMillis() - t1) + " ms");
     }
 
 

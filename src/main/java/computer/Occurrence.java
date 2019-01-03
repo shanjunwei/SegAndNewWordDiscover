@@ -23,7 +23,7 @@ public class Occurrence {
     /**
      * 切分段 去重后频数累计和
      */
-    static long totalCount;
+    public static long totalCount;
 
     public Occurrence() {
         redis.auth(REDIS_AUTH_PASSWORD);
@@ -111,7 +111,7 @@ public class Occurrence {
             float p = (float)entry.getValue() / (float) prefix_count;
             le += -p * (Math.log(p) / Math.log(2));
         }
-        System.out.println(prefix + "信息熵:" + le);
+        //System.out.println(prefix + "信息熵:" + le);
         return le;
     }
 
@@ -126,6 +126,11 @@ public class Occurrence {
     public float computeMutualInformation(String co_occurrence) {
         List<List<String>> possibleCombines = HanUtils.getPossibleCombination(co_occurrence);
         float result = 0.0f;
+
+        if(possibleCombines == null){
+            System.out.println("======"+co_occurrence);
+        }
+
         for (List<String> combine : possibleCombines) {
             String x = combine.get(0);
             String y = combine.get(1);

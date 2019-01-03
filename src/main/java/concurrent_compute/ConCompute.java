@@ -1,5 +1,6 @@
 package concurrent_compute;
 
+import config.Constants;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
@@ -23,7 +24,7 @@ public abstract class ConCompute {
     public static LinkedTransferQueue transferQueue = new LinkedTransferQueue(); // 阻塞队列,用来实现并发加速框架
     public static AtomicInteger CONCURRENT_COUNT = new AtomicInteger(0);  // 控制并发线程工作量
     public ExecutorService executorService = Executors.newCachedThreadPool();    //线程池
-    public CountDownLatch countDownLatch;  // 栅栏，控制并发线程全部结束之后才返回主线程
+    public CountDownLatch countDownLatch;  // = new CountDownLatch(getThreadNum());  //栅栏，控制并发线程全部结束之后才返回主线程;  // 栅栏，控制并发线程全部结束之后才返回主线程
 
     /**
      * 生产前置操作
@@ -41,7 +42,7 @@ public abstract class ConCompute {
      * 消费前置操作
      */
     void preConsumer() {
-        countDownLatch = new CountDownLatch(threadNum);  //栅栏，控制并发线程全部结束之后才返回主线程
+        countDownLatch = new CountDownLatch(getThreadNum());  //栅栏，控制并发线程全部结束之后才返回主线程
     }
 
     /**
@@ -57,6 +58,7 @@ public abstract class ConCompute {
                             Object msg = transferQueue.poll();
                             doConcurrentUnitTask(msg, jedis);
                         }
+                        jedis.close();
                         countDownLatch.countDown();
                     }
                 } else {
@@ -66,10 +68,10 @@ public abstract class ConCompute {
                     }
                     countDownLatch.countDown();
                 }
-
+                // countDownLatch.countDown();
             });
         }
-        // }
+        // System.out.println("------");
     }
 
     /**
@@ -92,18 +94,18 @@ public abstract class ConCompute {
     void afterConsumer() {
         try {
             countDownLatch.await();
+            CONCURRENT_COUNT.set(0);    //计数器重新置零
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        executorService.shutdown();
-        REDIS_POOL.destroy();
-        CONCURRENT_COUNT.set(0);    //计数器重新置零
+
+        System.out.println(Constants.wcMap.size());
     }
 
     /**
      * 并发计算
      */
-    void compute() {
+    public void compute() {
         long t1 = System.currentTimeMillis();
         preProduce();   // 前置操作
         produce();

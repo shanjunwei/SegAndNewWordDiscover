@@ -23,6 +23,7 @@ public class Config {
     public static final String trailSerailPath = "data/trail_save.txt"; // 切分错误的行记录
     public static boolean DEBUG_MODE = false;   //分词DEBUG 模式
     public static int WC_THREAD_NUM = 20;   //  线程数
+    public static int COMPUTE_THREAD_NUM = 30; // 并发计算线程数
 
     public static String REDIS_HOST = "localhost";
     public static String REDIS_AUTH_PASSWORD = "root"; // redis验证的密码
@@ -71,6 +72,7 @@ public class Config {
             CORPUS_INPUT_PATH = p.getProperty("CORPUS_INPUT_PATH", CORPUS_INPUT_PATH);
             DEBUG_MODE = Boolean.valueOf(p.getProperty("DEBUG_MODE", String.valueOf(DEBUG_MODE)));
             WC_THREAD_NUM = Integer.valueOf(p.getProperty("WC_THREAD_NUM", String.valueOf(WC_THREAD_NUM)));
+            COMPUTE_THREAD_NUM = Integer.valueOf(p.getProperty("COMPUTE_THREAD_NUM", String.valueOf(COMPUTE_THREAD_NUM)));
             REDIS_AUTH_PASSWORD = p.getProperty("REDIS_AUTH_PASSWORD", REDIS_AUTH_PASSWORD);  // redis 密码
             REDIS_HOST = p.getProperty("REDIS_HOST", REDIS_HOST);  // redis 服务地址
             NOVEL_INPUT_PATH = p.getProperty("NOVEL_INPUT_PATH", NOVEL_INPUT_PATH);  // 小说测试语料入口

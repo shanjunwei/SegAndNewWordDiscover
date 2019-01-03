@@ -1,8 +1,11 @@
 package concurrent_compute;
+
+import computer.Occurrence;
 import pojo.SegMsg;
 import pojo.Term;
 import redis.clients.jedis.Jedis;
 import util.HanUtils;
+
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -13,15 +16,11 @@ import static config.Constants.*;
 public class MIERConCompute extends ConCompute {
     @Override
     void preConsumer() {
-        setThreadNum(WC_THREAD_NUM);   // 设置并发线程数
+        setThreadNum(COMPUTE_THREAD_NUM);   // 设置并发线程数
         super.preConsumer();
         Jedis jedis = REDIS_POOL.getResource();
         jedis.auth(REDIS_AUTH_PASSWORD);
         setNeedRedis(true);
-//        jedis.zrevrangeWithScores(REDIS_WC_SINGLEWORD_KEY, 0, 4000000).forEach(it -> {   //  两个参数是下标
-//            singWordCountMap.put(it.getElement(), (int) it.getScore());
-//        });
-        //setQueueSize(3271991);
     }
 
     @Override
@@ -37,17 +36,45 @@ public class MIERConCompute extends ConCompute {
             Term term = new Term(seg.seg, seg.count, mi, leftEntropy, rightEntropy);  // 这里没办法算最后得分
             /**********************  redis存取 **************************/
 //            synchronized (jedis){
-//                jedis.hmset(seg.seg, term.convertToMap());
+            jedis.hmset(seg.seg, term.convertToMap());
 //            }
             /**********************  redis存取 **************************/
-            System.out.println(Thread.currentThread().getName() + " 消费:" + CONCURRENT_COUNT.get() + "->" + getQueueSize());
+            System.out.println(Thread.currentThread().getName() + " 消费:" + CONCURRENT_COUNT.get() + "->" + getQueueSize() + "==" + term.toTotalString());
         }
     }
 
+    public void computeAllSeg() {
+        Jedis jedis = new Jedis(REDIS_HOST);
+        jedis.auth(REDIS_AUTH_PASSWORD);
+        singWordCountMap = wcMap;
+        Occurrence occurrence = new Occurrence();
+        occurrence.totalCount = segTotalCount;
+        for (Map.Entry<String, Integer> entry : wcMap.entrySet()) {
+            String segStr = entry.getKey();
+            if (segStr.length() == 1) continue;
+
+            int segCount = entry.getValue();
+            //  并发计算互信息
+            float mi = occurrence.computeMutualInformation(segStr);
+            // 并发计算左右邻字信息熵
+            float rightEntropy = occurrence.computeRightEntropy(segStr, segCount);
+            // maxRE = Math.max(maxRE, rightEntropy);  // 求最大右信息熵   //totalRE = totalRE + rightEntropy;
+            float leftEntropy = occurrence.computeLeftEntropy(segStr, segCount);
+            Term term = new Term(segStr, segCount, mi, leftEntropy, rightEntropy);  // 这里没办法算最后得分
+            /**********************  redis存取 **************************/
+            System.out.println(term.toTotalString());
+            jedis.hmset(segStr, term.convertToMap());
+            /**********************  redis存取 **************************/
+        }
+        jedis.close();
+    }
+
+
     @Override
     public void produce() {
-        Jedis jedis = REDIS_POOL.getResource();
+        Jedis jedis = new Jedis(REDIS_HOST, 6379, Integer.MAX_VALUE);
         jedis.auth(REDIS_AUTH_PASSWORD);
+        jedis.flushAll();
         TreeMap<String, Integer> rightTreeMap = new TreeMap();
         TreeMap<String, Integer> leftTreeMap = new TreeMap();
         int count = 0;
@@ -102,12 +129,20 @@ public class MIERConCompute extends ConCompute {
         setQueueSize(transferQueue.size());
     }
 
+    @Override
+    void afterConsumer() {
+        super.afterConsumer();
+        executorService.shutdown();
+        REDIS_POOL.destroy();
+    }
+
     public static void main(String[] args) {
         long t1 = System.currentTimeMillis();
         CHINA_DAILY_TEST = false;
         //  词频统计 保存结果到内存
         WordCountConCompute wordCountConCompute = new WordCountConCompute();
         wordCountConCompute.compute();
+        System.out.println("  词频统计里 wcMap 的容量:" + wcMap.size());
         // 并发计算统计量
         MIERConCompute mierConCompute = new MIERConCompute();
         mierConCompute.compute();

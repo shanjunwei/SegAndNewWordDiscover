@@ -47,7 +47,8 @@ public class WordCountConCompute extends ConCompute {
         rightTreeMap.clear();
         leftTreeMap.clear();
         setQueueSize(transferQueue.size());
-        super.afterConsumer();*/
+        */
+        super.afterConsumer();
     }
 
     @Override
@@ -92,7 +93,6 @@ public class WordCountConCompute extends ConCompute {
             }
         }
         System.out.println("生产后阻塞队列的数量" + transferQueue.size());
-
     }
 
 
@@ -118,13 +118,10 @@ public class WordCountConCompute extends ConCompute {
     public static void main(String[] args) {
         long t1 = System.currentTimeMillis();
         CHINA_DAILY_TEST = false;
+
         WordCountConCompute wordCountConCompute = new WordCountConCompute();
+        REDIS_POOL.destroy();
         wordCountConCompute.compute();
-
-    /*    long t1 = System.currentTimeMillis();
-        PreProcess preProcess = new PreProcess();
-        preProcess.initNovel();*/
-
         System.out.println("总共候选词串" + Constants.wcMap.size());
         System.out.println("总耗时" + (System.currentTimeMillis() - t1) + " ms");
     }

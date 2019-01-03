@@ -9,8 +9,7 @@ import java.util.Set;
 
 import static config.CommonValue.segTotalCount;
 import static config.Config.MIN_PROBABILITY;
-import static config.Constants.trieLeft;
-import static config.Constants.trieRight;
+import static config.Constants.*;
 
 public class ConCalculateUtil {
 
@@ -24,7 +23,7 @@ public class ConCalculateUtil {
         for (List<String> combine : possibleCombines) {
             String x = combine.get(0);
             String y = combine.get(1);
-            result += computeMI(co_occurrence, x, y, jedis);   // 累加
+            result += computeMI(co_occurrence, x, y);   // 累加
         }
         return result;
     }
@@ -33,11 +32,11 @@ public class ConCalculateUtil {
     /**
      * 计算互信息,从redis中获取数据源
      */
-    public static float computeMI(String co_occurrence, String x, String y, Jedis jedis) {
-        double p_xy = Math.max(MIN_PROBABILITY, Double.valueOf(jedis.get(co_occurrence)) / (double) segTotalCount);
-        int x_count = Integer.valueOf(jedis.get(x));
+    public static float computeMI(String co_occurrence, String x, String y) {
+        double p_xy = Math.max(MIN_PROBABILITY, Double.valueOf(wcMap.get(co_occurrence)) / (double) segTotalCount);
+        int x_count = Integer.valueOf(wcMap.get(x));
         double p_x = Math.max(MIN_PROBABILITY, (double) x_count / (double) segTotalCount);
-        int y_count = Integer.valueOf(jedis.get(y));
+        int y_count = Integer.valueOf(wcMap.get(y));
         double p_y = Math.max(MIN_PROBABILITY, (double) y_count / (double) segTotalCount);
         return (float) (p_xy * (Math.log(p_xy / (p_x * p_y)) / Math.log(2)) * 1e5);   //return  (Math.log(p_xy / (p_x * p_y)) / Math.log(2)) * 10;
     }
@@ -77,13 +76,12 @@ public class ConCalculateUtil {
                 continue;
             }
             //System.out.println("====="+(float)entry.getValue() / (float) prefix_count);
-            float p = (float)entry.getValue() / (float) prefix_count;
+            float p = (float) entry.getValue() / (float) prefix_count;
             le += -p * (Math.log(p) / Math.log(2));
         }
-       // System.out.println(prefix + "信息熵:" + le);
+        // System.out.println(prefix + "信息熵:" + le);
         return le;
     }
-
 
 
 }
