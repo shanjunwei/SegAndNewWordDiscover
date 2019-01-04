@@ -45,7 +45,7 @@ public class JsonSerializationUtil {
      */
     public static void saveCalculateResultToRedis() {
         PreProcess preProcess = new PreProcess();
-        if (NovelTest) {
+        if (!CHINA_DAILY_TEST) {
             preProcess.initNovel();
         } else {
             preProcess.initData();

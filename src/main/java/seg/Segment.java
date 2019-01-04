@@ -145,7 +145,6 @@ public class Segment {
             }
         }
         final_result.sort(Comparator.comparing(term -> term.getLeftBound()));       // 结果再按照原来的位置排序
-        //if (DEBUG_MODE) System.out.println("抽词###########——————————> " + final_result);
         return final_result;
     }
 
@@ -171,7 +170,6 @@ public class Segment {
                 } else {
                     float score = occurrence.getNormalizedScore(term);
                     segScoreMap.put(seg.seg, score);   // 局部赋值到map
-                    //redis.hset(seg.seg, SCORE, String.valueOf(score));  // 修改某一属性值
                     result.add(seg);
                 }
             }

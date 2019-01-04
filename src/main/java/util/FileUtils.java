@@ -113,6 +113,7 @@ public class FileUtils {
             ex.printStackTrace();
         }
     }
+
     // 按行读取进集合
     public static HashSet readFileByLineToHashSet(String inputFilePath) {
         HashSet set = new HashSet();
@@ -134,6 +135,7 @@ public class FileUtils {
         }
         return set;
     }
+
     // 按行读取进集合
     public static void writeStringToFile(String outPutPath, String text) {
         try {
@@ -144,6 +146,16 @@ public class FileUtils {
             writer.close();
         } catch (IOException ex) {
             ex.printStackTrace();
+        }
+    }
+
+    public static void writeResultToFile(String outputPath, List<String> list) {
+        try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputPath), "utf-8"))) {
+            for (String text : list) {
+                writer.write(text + "\n");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }

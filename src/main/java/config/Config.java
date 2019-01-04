@@ -24,13 +24,16 @@ public class Config {
     public static boolean DEBUG_MODE = false;   //分词DEBUG 模式
     public static int WC_THREAD_NUM = 20;   //  线程数
     public static int COMPUTE_THREAD_NUM = 30; // 并发计算线程数
+    public static int SEG_THREAD_NUM = 30; // 并发抽词线程数
 
     public static String REDIS_HOST = "localhost";
+    public static int REDIS_PORT = 6379;
     public static String REDIS_AUTH_PASSWORD = "root"; // redis验证的密码
 
 
-    public static boolean CHINA_DAILY_TEST = true; // 是否是人民日报测试
+    public static boolean CHINA_DAILY_TEST = false; // 是否是人民日报测试
     public static String NOVEL_INPUT_PATH = "data\\GameOfThrones.txt"; // 小说文本语料入口
+    public static String EXTRACT_OUTPUT  = "data/result.txt";   // 抽词输出结果
 
     /**
      * 切分段去重后 总互信息
@@ -49,15 +52,15 @@ public class Config {
     /**
      * 切分段去重后 最大互信息
      */
-    public static final float maxMI = 1123.5605f;
+    public static  float maxMI = 1123.5605f;
     /**
      * 切分段去重后  最大左熵
      */
-    public static final float maxLE = 5.094753f;
+    public static  float maxLE = 5.094753f;
     /**
      * 切分段去重后  最大右熵
      */
-    public static final float maxRE = 5.173816f;
+    public static  float maxRE = 5.173816f;
 
     static {
         /****************************************** 读取配置文件 ************************************************/
@@ -67,15 +70,18 @@ public class Config {
             MI_THRESHOLD_VALUE = Float.valueOf(p.getProperty("MI_THRESHOLD_VALUE", String.valueOf(MI_THRESHOLD_VALUE)));
             ENTROPY_THETA = Float.valueOf(p.getProperty("ENTROPY_THETA", String.valueOf(ENTROPY_THETA)));
             MAX_WORD_LEN = Integer.valueOf(p.getProperty("MAX_WORD_LEN", String.valueOf(MAX_WORD_LEN)));
+            REDIS_PORT  = Integer.valueOf(p.getProperty("REDIS_PORT", String.valueOf(REDIS_PORT)));
             MIN_LEFT_ENTROPY = Float.valueOf(p.getProperty("MIN_LEFT_ENTROPY", String.valueOf(MIN_LEFT_ENTROPY)));
             MIN_RIGHT_ENTROPY = Float.valueOf(p.getProperty("MIN_RIGHT_ENTROPY", String.valueOf(MIN_RIGHT_ENTROPY)));
             CORPUS_INPUT_PATH = p.getProperty("CORPUS_INPUT_PATH", CORPUS_INPUT_PATH);
             DEBUG_MODE = Boolean.valueOf(p.getProperty("DEBUG_MODE", String.valueOf(DEBUG_MODE)));
             WC_THREAD_NUM = Integer.valueOf(p.getProperty("WC_THREAD_NUM", String.valueOf(WC_THREAD_NUM)));
             COMPUTE_THREAD_NUM = Integer.valueOf(p.getProperty("COMPUTE_THREAD_NUM", String.valueOf(COMPUTE_THREAD_NUM)));
+            SEG_THREAD_NUM = Integer.valueOf(p.getProperty("SEG_THREAD_NUM", String.valueOf(SEG_THREAD_NUM)));
             REDIS_AUTH_PASSWORD = p.getProperty("REDIS_AUTH_PASSWORD", REDIS_AUTH_PASSWORD);  // redis 密码
             REDIS_HOST = p.getProperty("REDIS_HOST", REDIS_HOST);  // redis 服务地址
             NOVEL_INPUT_PATH = p.getProperty("NOVEL_INPUT_PATH", NOVEL_INPUT_PATH);  // 小说测试语料入口
+            EXTRACT_OUTPUT = p.getProperty("EXTRACT_OUTPUT", EXTRACT_OUTPUT);  // 小说测试语料入口
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -94,6 +100,4 @@ public class Config {
      * 字典树序列化路径
      */
     public static String SerialPath = "D:\\BigData\\HanLP\\trie_serial.txt";
-
-
 }

@@ -7,6 +7,7 @@ import util.HanUtils;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 import static config.Config.*;
 import static config.Constants.*;
@@ -15,45 +16,54 @@ import static config.Constants.*;
  * 词共现 统计量计算,包括 互信息,左右熵
  */
 public class Occurrence {
-    private Jedis redis = new Jedis(REDIS_HOST);
     /**
      * 全部 切分 数量
      */
-    long totalTerm;
+    // long totalTerm;
     /**
      * 切分段 去重后频数累计和
      */
     public static long totalCount;
 
     public Occurrence() {
-        redis.auth(REDIS_AUTH_PASSWORD);
     }
 
     /**
      * 添加所有切分词  计算互信息 信息熵等统计量 ,对外提供这一个入口即可
      */
     public void addAllSegAndCompute(Map<String, Integer> wcMap) {
+        Jedis redis  = new Jedis(REDIS_HOST,REDIS_PORT);
+        redis.auth(REDIS_AUTH_PASSWORD);
         System.out.println("计算统计量中-->");
         int count = 0;
         long t1 = System.currentTimeMillis();
-
-        totalTerm = wcMap.size();
+        //totalTerm = wcMap.size();
+        TreeMap<String, Integer> rightTreeMap = new TreeMap();
+        TreeMap<String, Integer> leftTreeMap = new TreeMap();
         for (Map.Entry<String, Integer> entry : wcMap.entrySet()) {
-            trieRight.put(entry.getKey(), entry.getValue());     // 右前缀字典树
-            trieLeft.put(HanUtils.reverseString(entry.getKey()), entry.getValue());  // 左前缀字典树
-            totalCount = totalCount + entry.getValue();    // 计算总词频
+            rightTreeMap.put(entry.getKey(), entry.getValue());     // 右前缀字典树
+            leftTreeMap.put(HanUtils.reverseString(entry.getKey()), entry.getValue());  // 左前缀字典树
+            totalCount = totalCount + entry.getValue(); // 计算总词频
         }
+        trieLeft.build(leftTreeMap);
+        trieRight.build(rightTreeMap);
         for (Map.Entry<String, Integer> entry : wcMap.entrySet()) {
             String seg = entry.getKey();
+            if (seg.length() <= 1) continue;
             int seg_count = entry.getValue();
+
+            if ("一九".equals(seg)) {
+                System.out.println("=======");
+            }
+
             // 1. 计算信息熵
             float rightEntropy = computeRightEntropy(seg, seg_count);
-            // maxRE = Math.max(maxRE, rightEntropy);  // 求最大右信息熵   //totalRE = totalRE + rightEntropy;
+            maxRE = Math.max(maxRE, rightEntropy);  // 求最大右信息熵   //totalRE = totalRE + rightEntropy;
             float leftEntropy = computeLeftEntropy(seg, seg_count);
-            //    maxLE = Math.max(maxLE, leftEntropy);  // 求最大左信息熵    // totalLE = totalLE + leftEntropy;
+            maxLE = Math.max(maxLE, leftEntropy);  // 求最大左信息熵    // totalLE = totalLE + leftEntropy;
             // 2. 计算互信息
             float mi = computeMutualInformation(seg);
-            //    maxMI = Math.max(maxMI, mi);   // 计算最大互信息  //totalMI = totalMI + mi;
+            maxMI = Math.max(maxMI, mi);   // 计算最大互信息  //totalMI = totalMI + mi;
             Term term = new Term(seg, seg_count, mi, leftEntropy, rightEntropy);  // 这里没办法算最后得分
             // 将map存入redis中
             /**********************  redis存取 **************************/
@@ -72,6 +82,7 @@ public class Occurrence {
         wcMap.clear();   // 释放无用的内存
         Term max_term = new Term(MAX_KEY, 0, maxMI, maxLE, maxRE);
         redis.hmset(MAX_KEY, max_term.convertToMap());    // 保存最大值
+        redis.close();
         System.out.println("统计量计算总耗时: " + (System.currentTimeMillis() - t1) + "ms");
     }
 
@@ -95,20 +106,20 @@ public class Occurrence {
      * 信息熵计算
      */
     private float computeEntropy(Set<Map.Entry<String, Integer>> entrySet, String prefix, int prefix_count) {
-      //  float totalFrequency = 0;
+        //  float totalFrequency = 0;
       /*  for (Map.Entry<String, Integer> entry : entrySet) {
             if (entry.getKey().length() != prefix.length() + 1) {
                 continue;
             }
             totalFrequency += entry.getValue();
         }*/
-       // totalFrequency = prefix_count;
+        // totalFrequency = prefix_count;
         float le = 0;
         for (Map.Entry<String, Integer> entry : entrySet) {
             if (entry.getKey().length() != prefix.length() + 1) {
                 continue;
             }
-            float p = (float)entry.getValue() / (float) prefix_count;
+            float p = (float) entry.getValue() / (float) prefix_count;
             le += -p * (Math.log(p) / Math.log(2));
         }
         //System.out.println(prefix + "信息熵:" + le);
@@ -116,7 +127,7 @@ public class Occurrence {
     }
 
     public static void main(String[] args) {
-        System.out.println(12.0/13.0);
+        System.out.println(12.0 / 13.0);
     }
 
 
@@ -124,13 +135,9 @@ public class Occurrence {
      * 计算互信息 穷举当前切分的所有可能组合，将互信息全部计算,然后取最小值
      */
     public float computeMutualInformation(String co_occurrence) {
+        if (co_occurrence.length() == 1) return 0;
         List<List<String>> possibleCombines = HanUtils.getPossibleCombination(co_occurrence);
         float result = 0.0f;
-
-        if(possibleCombines == null){
-            System.out.println("======"+co_occurrence);
-        }
-
         for (List<String> combine : possibleCombines) {
             String x = combine.get(0);
             String y = combine.get(1);
@@ -144,9 +151,9 @@ public class Occurrence {
      */
     private float computeMI(String co_occurrence, String x, String y) {
         double p_xy = Math.max(MIN_PROBABILITY, (double) wcMap.get(co_occurrence) / (double) totalCount);
-        int x_count = x.length() == 1 ? singWordCountMap.get(x) : wcMap.get(x);
+        int x_count = wcMap.get(x);
         double p_x = Math.max(MIN_PROBABILITY, (double) x_count / (double) totalCount);
-        int y_count = y.length() == 1 ? singWordCountMap.get(y) : wcMap.get(y);
+        int y_count = wcMap.get(y);
         double p_y = Math.max(MIN_PROBABILITY, (double) y_count / (double) totalCount);
         return (float) (p_xy * (Math.log(p_xy / (p_x * p_y)) / Math.log(2)) * 1e5);   //return  (Math.log(p_xy / (p_x * p_y)) / Math.log(2)) * 10;
     }
@@ -158,7 +165,6 @@ public class Occurrence {
         if (term == null) {
             return 0f;
         }
-
         if (DEBUG_MODE)
             System.out.println("   maxMI->   " + maxMI + "maxLE->" + maxLE + " maxRE->" + maxRE);
         //term.score = term.mi / totalMI + term.le / totalLE + term.re / totalRE;   // 归一化
@@ -182,7 +188,9 @@ public class Occurrence {
         float min = Math.min(leftEntropy, rightEntropy);
         float max = Math.max(leftEntropy, rightEntropy);
         if (min / max < ENTROPY_THETA) return true;
-
+        //  最小信息熵过滤
+        if (leftEntropy < MIN_LEFT_ENTROPY) return true;
+        if (rightEntropy < MIN_RIGHT_ENTROPY) return true;
         return false;
     }
 

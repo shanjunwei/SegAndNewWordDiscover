@@ -5,10 +5,8 @@ import pojo.SegMsg;
 import pojo.Term;
 import redis.clients.jedis.Jedis;
 import util.HanUtils;
-
 import java.util.Map;
 import java.util.TreeMap;
-
 import static config.CommonValue.segTotalCount;
 import static config.Config.*;
 import static config.Constants.*;
@@ -18,8 +16,6 @@ public class MIERConCompute extends ConCompute {
     void preConsumer() {
         setThreadNum(COMPUTE_THREAD_NUM);   // 设置并发线程数
         super.preConsumer();
-        Jedis jedis = REDIS_POOL.getResource();
-        jedis.auth(REDIS_AUTH_PASSWORD);
         setNeedRedis(true);
     }
 
@@ -35,9 +31,7 @@ public class MIERConCompute extends ConCompute {
             float leftEntropy = ConCalculateUtil.computeLeftEntropy(seg.seg, seg.count);
             Term term = new Term(seg.seg, seg.count, mi, leftEntropy, rightEntropy);  // 这里没办法算最后得分
             /**********************  redis存取 **************************/
-//            synchronized (jedis){
             jedis.hmset(seg.seg, term.convertToMap());
-//            }
             /**********************  redis存取 **************************/
             System.out.println(Thread.currentThread().getName() + " 消费:" + CONCURRENT_COUNT.get() + "->" + getQueueSize() + "==" + term.toTotalString());
         }
@@ -46,7 +40,6 @@ public class MIERConCompute extends ConCompute {
     public void computeAllSeg() {
         Jedis jedis = new Jedis(REDIS_HOST);
         jedis.auth(REDIS_AUTH_PASSWORD);
-        singWordCountMap = wcMap;
         Occurrence occurrence = new Occurrence();
         occurrence.totalCount = segTotalCount;
         for (Map.Entry<String, Integer> entry : wcMap.entrySet()) {
@@ -72,7 +65,7 @@ public class MIERConCompute extends ConCompute {
 
     @Override
     public void produce() {
-        Jedis jedis = new Jedis(REDIS_HOST, 6379, Integer.MAX_VALUE);
+        Jedis jedis = new Jedis(REDIS_HOST, REDIS_PORT, Integer.MAX_VALUE);
         jedis.auth(REDIS_AUTH_PASSWORD);
         jedis.flushAll();
         TreeMap<String, Integer> rightTreeMap = new TreeMap();
@@ -148,5 +141,4 @@ public class MIERConCompute extends ConCompute {
         mierConCompute.compute();
         System.out.println("总耗时" + (System.currentTimeMillis() - t1) + " ms");
     }
-
 }

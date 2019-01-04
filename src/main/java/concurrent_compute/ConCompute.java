@@ -20,16 +20,18 @@ public abstract class ConCompute {
     private int threadNum = 0;  // 线程数量
     private int queueSize = 0;  // 阻塞队列生产结束后堆积的消息数量
     private boolean needRedis = false;  //默认不使用redis
-    public static final JedisPool REDIS_POOL = new JedisPool(new JedisPoolConfig(), REDIS_HOST, 6379, 30);  // 不能在多个线程中使用一个redis实例
+    public static JedisPool REDIS_POOL;  // = new JedisPool(new JedisPoolConfig(), REDIS_HOST, REDIS_PORT, Integer.MAX_VALUE);  // 不能在多个线程中使用一个redis实例
     public static LinkedTransferQueue transferQueue = new LinkedTransferQueue(); // 阻塞队列,用来实现并发加速框架
     public static AtomicInteger CONCURRENT_COUNT = new AtomicInteger(0);  // 控制并发线程工作量
-    public ExecutorService executorService = Executors.newCachedThreadPool();    //线程池
+    public ExecutorService executorService;  // = Executors.newCachedThreadPool();    //线程池
     public CountDownLatch countDownLatch;  // = new CountDownLatch(getThreadNum());  //栅栏，控制并发线程全部结束之后才返回主线程;  // 栅栏，控制并发线程全部结束之后才返回主线程
 
     /**
      * 生产前置操作
      */
     void preProduce() {
+        REDIS_POOL = new JedisPool(new JedisPoolConfig(), REDIS_HOST, REDIS_PORT, Integer.MAX_VALUE);
+        executorService = Executors.newCachedThreadPool();
     }
 
     /**
@@ -60,6 +62,10 @@ public abstract class ConCompute {
                         }
                         jedis.close();
                         countDownLatch.countDown();
+                    }catch (Exception e){
+                        e.printStackTrace();
+                    }finally {
+
                     }
                 } else {
                     while (CONCURRENT_COUNT.incrementAndGet() <= getQueueSize()) {
@@ -68,10 +74,8 @@ public abstract class ConCompute {
                     }
                     countDownLatch.countDown();
                 }
-                // countDownLatch.countDown();
             });
         }
-        // System.out.println("------");
     }
 
     /**
@@ -95,6 +99,8 @@ public abstract class ConCompute {
         try {
             countDownLatch.await();
             CONCURRENT_COUNT.set(0);    //计数器重新置零
+            executorService.shutdown();
+            REDIS_POOL.destroy();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

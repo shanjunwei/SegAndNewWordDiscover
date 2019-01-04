@@ -1,5 +1,6 @@
 package SegmentTest;
 
+import concurrent_compute.ExtractWordsConCompute;
 import concurrent_compute.MIERConCompute;
 import concurrent_compute.WordCountConCompute;
 import config.Config;
@@ -8,15 +9,10 @@ import org.apache.commons.lang.StringUtils;
 import redis.clients.jedis.Jedis;
 import seg.Segment;
 import serilize.JsonSerializationUtil;
-
 import java.io.*;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import static config.Config.*;
-import static config.Constants.REDIS_WC_KEY;
-import static config.Constants.wcMap;
+import static config.Constants.*;
 
 /**
  * 分词测试类
@@ -24,10 +20,12 @@ import static config.Constants.wcMap;
 public class SegTest {
 
     public static void main(String[] args) {
+        //ConCompute();
+        Compute();
+        //ConExtractWords();
         //Constants.NovelTest = true;
         //testSingleSentenceSeg(args);
         //testRepeatRegx(args);
-        //testCalculationAndSerializationToFile();    //  计算并序列化到文件
         //testDebugByFileLine("H:\\小说\\《冰与火之歌》全集.txt",100);   // debug
         //testDebugByFileLine(Config.ErrorSegPath,600);
         //testAllChineseSeg(args);
@@ -37,14 +35,25 @@ public class SegTest {
         //testRediSave(args);
         //testExtractWord(args);
         //testExtractWords(args);
+        //testCalculationAndSerializationToFile();    //  计算并序列化到文件
         //testRedisWordCount();
         //testCommonWordCount();
-        testConCompute();
     }
 
-    public static void testConCompute() {
+    /**
+     * 并发统计量计算--多线程 词频统计以及计算
+     */
+    public static void ConExtractWords() {
         long t1 = System.currentTimeMillis();
-        CHINA_DAILY_TEST = true;
+        ExtractWordsConCompute  extractWordsConCompute = new ExtractWordsConCompute();
+        extractWordsConCompute.compute();
+        System.out.println("总耗时" + (System.currentTimeMillis() - t1) + " ms");
+    }
+    /**
+     * 并发统计量计算--多线程 词频统计以及计算
+     */
+    public static void ConCompute() {
+        long t1 = System.currentTimeMillis();
         //  词频统计 保存结果到内存
         WordCountConCompute wordCountConCompute = new WordCountConCompute();
         wordCountConCompute.compute();
@@ -55,25 +64,14 @@ public class SegTest {
         System.out.println("总耗时" + (System.currentTimeMillis() - t1) + " ms");
     }
 
-    public static void testCommonWordCount() {
-/*        long  t1  = System.currentTimeMillis();
-        PreProcess preProcess   = new PreProcess();
-        preProcess.initNovel();
-        System.out.println("总共候选词串"+Constants.wcMap.size());
-        System.out.println("总耗时"+(System.currentTimeMillis()-t1) +" ms");*/
-        Jedis jedis = new Jedis(REDIS_HOST, 6379, 100000);
-        jedis.auth(REDIS_AUTH_PASSWORD);
-//        jedis.zrevrangeWithScores(REDIS_WC_KEY, 0, 200000).forEach(it -> {
-//            System.out.println(it.getElement() + " -> " + it.getScore());
-//        });
-
-        System.out.println(jedis.zrevrangeWithScores(REDIS_WC_KEY, 0, 4000000).size());
-        jedis.close();
-    }
-
-
     /**
-     * 测试单个句子
+     * 统计量计算-- 单线程 词频统计与计算
+     */
+    public static void Compute() {
+        JsonSerializationUtil.saveCalculateResultToRedis();
+    }
+    /**
+     * 测试对单个句子进行抽词
      */
     public static void testSingleSentenceSeg(String[] args) {
         if (args.length < 1) System.exit(0);
@@ -85,8 +83,6 @@ public class SegTest {
         List<String> result = segment.segment(test_text);
         System.out.println("\n*************************分词结果集" + result + "*************************\n");
     }
-
-
     /**
      * 测试纯汉字分词
      */
@@ -103,20 +99,8 @@ public class SegTest {
     }
 
     /**
-     * 测试 例子 孙少平 少平
-     */
-    public static void testRepeatRegx(String[] args) {
-        String regEx = "少平";
-        Pattern p = Pattern.compile(regEx);
-        Matcher m = p.matcher(args[0]);
-        while (m.find()) {
-            String find = m.group();
-            System.out.println(find + " [" + m.start() + "-" + m.end() + "]");
-        }
-    }
-
-    /**
-     * 测试 之前分错的前1000行并输出调试信息
+     * 根据输入的文本按行抽词
+     *  Line  控制测试输入文本的行数
      */
     public static void testDebugByFileLine(String inputPath, int line) {
         Config.DEBUG_MODE = true;
@@ -139,19 +123,6 @@ public class SegTest {
             e.printStackTrace();
         }
     }
-
-    /**
-     * 测试 保存结算结果到redis
-     */
-    public static void saveCalculateResultToRedis() {
-//        Constants.NovelTest = true;
-//        Config.NovelPath = "D:\\HanLP\\novel\\天龙八部.txt";
-        //Constants.redis.flushAll();    // 先刷掉之前所有结果
-        JsonSerializationUtil.saveCalculateResultToRedis();
-        //System.out.println(Constants.redis.hgetAll("从此"));
-    }
-
-
     /**
      * 测试抽词
      */
@@ -162,8 +133,6 @@ public class SegTest {
         redis.auth("root");
         //System.out.println("抽词结果----->" + segment.extractWords(args[0]) + "<---");
     }
-
-
     /**
      * 测试 redis 存取
      */
@@ -173,13 +142,10 @@ public class SegTest {
         //System.out.println(jedis.hgetAll(args[0]));
         System.out.println(jedis.get(args[0]));
     }
-
-
     /**
      * 测试 抽词
      */
     public static void testExtractWord(String[] args) {
-        Constants.NovelTest = true;
         Config.DEBUG_MODE = true;
         Segment segment = new Segment();
         //System.out.println("抽词结果----->" + segment.extractWords(args[0]) + "<---");

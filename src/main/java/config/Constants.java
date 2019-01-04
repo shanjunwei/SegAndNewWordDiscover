@@ -26,11 +26,11 @@ public class Constants {
     public static final String SCORE = "score";
     /**********************  redis->  Term对象属性值 **************************/
 
-    public static boolean NovelTest = false;   // 是测试小说还是人民日报语料,默认的是人名日报
+    //public static boolean NovelTest = false;   // 是测试小说还是人民日报语料,默认的是人名日报
     public static HashSet stopWordSet = new HashSet();     // 停用词哈希表
     //连接本地的 Redis 服务
-    public static Map<String, Integer> wcMap = new ConcurrentHashMap<>(1000000);   // 用于存储切分结果和统计词频
-    public static Map<String, Integer> singWordCountMap = new ConcurrentHashMap<>(100000);   // 单字词频
+    public static Map<String, Integer> wcMap = new ConcurrentHashMap<>(5000000);   // 用于存储切分结果和统计词频
+    //public static Map<String, Integer> singWordCountMap = new ConcurrentHashMap<>(100000);   // 单字词频
 
     public static int QUEUE_SIZE = 0;
 

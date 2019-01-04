@@ -12,8 +12,6 @@ import static config.Config.MIN_PROBABILITY;
 import static config.Constants.*;
 
 public class ConCalculateUtil {
-
-
     /**
      * 计算互信息 穷举当前切分的所有可能组合，将互信息全部计算,然后取最小值
      */

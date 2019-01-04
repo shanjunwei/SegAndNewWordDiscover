@@ -20,36 +20,9 @@ import static config.Constants.*;
 
 /**
  * 并发词频统计,以redis 作为外部存储,大数据下减轻了内存的压力
- * 权利的游戏1-5完整小说文本,20个线程耗时  190377ms </>  单线程跑时间不能看
+ * 权利的游戏1-5完整小说文本,20个线程耗时  2069ms </>  单线程跑时间 2011 ms
  */
 public class WordCountConCompute extends ConCompute {
-
-    @Override
-    void afterConsumer() {
-        /*Jedis jedis = REDIS_POOL.getResource();
-        //  两个字以上的词频
-        Set<Tuple> set = jedis.zrevrangeWithScores(REDIS_WC_KEY, 0, Long.MAX_VALUE);
-        TreeMap rightTreeMap = new TreeMap();
-        TreeMap leftTreeMap = new TreeMap();
-        set.forEach(it -> {   //  两个参数是下标
-            SegMsg segMsg = new SegMsg(it.getElement(), (int) it.getScore());
-            transferQueue.add(segMsg);
-            segTotalCount += it.getScore();
-            rightTreeMap.put(it.getElement(), it.getScore());
-            leftTreeMap.put(HanUtils.reverseString(it.getElement()), (int) it.getScore());
-            jedis.set(String.valueOf(it.getElement()), String.valueOf((int) it.getScore()));   //  将词频统计结果放redis
-        });
-        jedis.close();
-        set.clear();   //  释放内存
-        //  构造字典树应避免动态构造
-        trieRight.build(rightTreeMap);
-        trieLeft.build(leftTreeMap);
-        rightTreeMap.clear();
-        leftTreeMap.clear();
-        setQueueSize(transferQueue.size());
-        */
-        super.afterConsumer();
-    }
 
     @Override
     void preConsumer() {
@@ -67,7 +40,6 @@ public class WordCountConCompute extends ConCompute {
         if (msg instanceof String) {
             String segment = (String) msg;
             HanUtils.FMMSegment(segment, true);
-            //System.out.println(Thread.currentThread().getName() + " 消费:" + CONCURRENT_COUNT.get() + "->" + segment);
         }
     }
 
@@ -118,11 +90,10 @@ public class WordCountConCompute extends ConCompute {
     public static void main(String[] args) {
         long t1 = System.currentTimeMillis();
         CHINA_DAILY_TEST = false;
-
         WordCountConCompute wordCountConCompute = new WordCountConCompute();
         REDIS_POOL.destroy();
         wordCountConCompute.compute();
         System.out.println("总共候选词串" + Constants.wcMap.size());
-        System.out.println("总耗时" + (System.currentTimeMillis() - t1) + " ms");
+        System.out.println( wordCountConCompute.getThreadNum()+ "个线程 总耗时" + (System.currentTimeMillis() - t1) + " ms");
     }
 }
