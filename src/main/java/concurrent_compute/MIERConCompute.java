@@ -5,8 +5,10 @@ import pojo.SegMsg;
 import pojo.Term;
 import redis.clients.jedis.Jedis;
 import util.HanUtils;
+
 import java.util.Map;
 import java.util.TreeMap;
+
 import static config.CommonValue.segTotalCount;
 import static config.Config.*;
 import static config.Constants.*;
@@ -33,7 +35,7 @@ public class MIERConCompute extends ConCompute {
             /**********************  redis存取 **************************/
             jedis.hmset(seg.seg, term.convertToMap());
             /**********************  redis存取 **************************/
-            System.out.println(Thread.currentThread().getName() + " 消费:" + CONCURRENT_COUNT.get() + "->" + getQueueSize() + "==" + term.toTotalString());
+            System.out.println(Thread.currentThread().getName() + " 消费:" + CONCURRENT_COUNT.get() + "->" + getQueueSize());
         }
     }
 

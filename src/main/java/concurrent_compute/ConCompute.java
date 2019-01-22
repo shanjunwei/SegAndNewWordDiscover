@@ -30,7 +30,8 @@ public abstract class ConCompute {
      * 生产前置操作
      */
     void preProduce() {
-        REDIS_POOL = new JedisPool(new JedisPoolConfig(), REDIS_HOST, REDIS_PORT, Integer.MAX_VALUE);
+       // REDIS_POOL = new JedisPool(new JedisPoolConfig(), REDIS_HOST, REDIS_PORT, Integer.MAX_VALUE);
+        REDIS_POOL = new JedisPool(new JedisPoolConfig(), REDIS_HOST, REDIS_PORT);
         executorService = Executors.newCachedThreadPool();
     }
 
@@ -98,14 +99,12 @@ public abstract class ConCompute {
     void afterConsumer() {
         try {
             countDownLatch.await();
-            CONCURRENT_COUNT.set(0);    //计数器重新置零
             executorService.shutdown();
             REDIS_POOL.destroy();
+            CONCURRENT_COUNT.set(0);    //计数器重新置零
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-
-        System.out.println(Constants.wcMap.size());
     }
 
     /**

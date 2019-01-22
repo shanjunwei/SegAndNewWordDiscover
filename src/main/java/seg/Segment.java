@@ -150,7 +150,7 @@ public class Segment {
 
     //  第一轮筛选
     private static Term getTopCandidateFromSet(List<Term> termList, Map<String, Float> segScoreMap, Jedis jedis) {
-        //if (DEBUG_MODE) System.out.println("   第一轮筛选前->   " + termList + "\n");
+        if (DEBUG_MODE) System.out.println("   第一轮筛选前->   " + termList + "\n");
         List<Term> result = new ArrayList<>();
         Occurrence occurrence = new Occurrence();
         // 计算候选词的 互信息 和 信息熵
@@ -160,13 +160,13 @@ public class Segment {
             if (term != null) {
                 // 信息熵过滤
                 if (occurrence.EntropyFilter(term.le, term.re)) { // 过滤掉信息熵过滤明显不是词的
-                  //  if (DEBUG_MODE)
-                  //      System.out.println("信息熵过滤-> " + seg + "   mi->   " + term.mi + " le->" + term.le + " re->" + term.re);
+                    if (DEBUG_MODE)
+                        System.out.println("信息熵过滤-> " + seg + "   mi->   " + term.mi + " le->" + term.le + " re->" + term.re);
                 }
                 // 互信息过滤
                 else if (occurrence.MutualInformationFilter(term.mi)) {
-                   // if (DEBUG_MODE)
-                    //    System.out.println("互信息过滤-> " + seg + "   mi->   " + term.mi + " le->" + term.le + " re->" + term.re);
+                    if (DEBUG_MODE)
+                        System.out.println("互信息过滤-> " + seg + "   mi->   " + term.mi + " le->" + term.le + " re->" + term.re);
                 } else {
                     float score = occurrence.getNormalizedScore(term);
                     segScoreMap.put(seg.seg, score);   // 局部赋值到map
@@ -176,7 +176,7 @@ public class Segment {
         }
         // 对候选集根据 归一化得分 降序排列
         result.sort((o1, o2) -> Float.compare(segScoreMap.get(o2.seg), segScoreMap.get(o1.seg)));
-       // if (DEBUG_MODE) System.out.println("   第一轮排序后*****->   " + result + "\n");
+        if (DEBUG_MODE) System.out.println("   第一轮排序后*****->   " + result + "\n");
         return result.size() == 0 ? null : result.get(0);
     }
 

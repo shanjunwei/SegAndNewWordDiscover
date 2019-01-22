@@ -1,10 +1,9 @@
 package SegmentTest;
 
-import concurrent_compute.ExtractWordsConCompute;
 import concurrent_compute.MIERConCompute;
 import concurrent_compute.WordCountConCompute;
+import concurrent_compute.extract.queue.Consumer;
 import config.Config;
-import config.Constants;
 import org.apache.commons.lang.StringUtils;
 import redis.clients.jedis.Jedis;
 import seg.Segment;
@@ -21,8 +20,8 @@ public class SegTest {
 
     public static void main(String[] args) {
         //ConCompute();
-        Compute();
-        //ConExtractWords();
+        //Compute();
+        ConExtractWords();
         //Constants.NovelTest = true;
         //testSingleSentenceSeg(args);
         //testRepeatRegx(args);
@@ -45,8 +44,9 @@ public class SegTest {
      */
     public static void ConExtractWords() {
         long t1 = System.currentTimeMillis();
-        ExtractWordsConCompute  extractWordsConCompute = new ExtractWordsConCompute();
-        extractWordsConCompute.compute();
+        /*ExtractWordsConCompute  extractWordsConCompute = new ExtractWordsConCompute();
+        extractWordsConCompute.compute();*/
+        Consumer.compute();
         System.out.println("×ÜºÄÊ±" + (System.currentTimeMillis() - t1) + " ms");
     }
     /**

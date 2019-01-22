@@ -10,6 +10,17 @@ import java.util.List;
 import java.util.Map;
 
 public class FileUtils {
+
+    public static void writeMapResultToFile(String outputPath, List<Map.Entry<Integer, String>> list) {
+        try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputPath), "utf-8"))) {
+            for (Map.Entry<Integer, String> mapping : list) {
+                if(StringUtils.isBlank(mapping.getValue())) continue;
+                writer.write(mapping.getValue() + "\n");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
     // 文件读写
     public static String readFileToString(String fileName) {
         String encoding = "UTF-8";
@@ -152,7 +163,9 @@ public class FileUtils {
     public static void writeResultToFile(String outputPath, List<String> list) {
         try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputPath), "utf-8"))) {
             for (String text : list) {
-                writer.write(text + "\n");
+                if (StringUtils.isNotBlank(text)) {
+                    writer.write(text + "\n");
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();

@@ -165,8 +165,6 @@ public class Occurrence {
         if (term == null) {
             return 0f;
         }
-        if (DEBUG_MODE)
-            System.out.println("   maxMI->   " + maxMI + "maxLE->" + maxLE + " maxRE->" + maxRE);
         //term.score = term.mi / totalMI + term.le / totalLE + term.re / totalRE;   // 归一化
         //term.score = term.mi / totalMI + Math.min(term.le / totalLE, term.re / totalRE);   // 01更换归一化策略 -> 取左右熵最小值
         // 用log 函数进行归一化,参考 http://www.cnblogs.com/pejsidney/p/8031250.html

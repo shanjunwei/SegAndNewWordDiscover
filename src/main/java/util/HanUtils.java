@@ -2,11 +2,6 @@ package util;
 
 import computer.Occurrence;
 import config.Constants;
-import net.sourceforge.pinyin4j.PinyinHelper;
-import net.sourceforge.pinyin4j.format.HanyuPinyinCaseType;
-import net.sourceforge.pinyin4j.format.HanyuPinyinOutputFormat;
-import net.sourceforge.pinyin4j.format.HanyuPinyinToneType;
-import net.sourceforge.pinyin4j.format.exception.BadHanyuPinyinOutputFormatCombination;
 import org.apache.commons.lang.StringUtils;
 import pojo.Term;
 import redis.clients.jedis.Jedis;
@@ -54,9 +49,9 @@ public class HanUtils {
         }
     }
 
-    /**
+/*    *//**
      * 取中文词汇转换成拼音    如 张三丰 ->  zhangshanfeng
-     */
+     *//*
     public static String firstPinyinCharStr(String chineseWord) {
         StringBuffer pinyinName = new StringBuffer();
         char[] nameChar = chineseWord.toCharArray();
@@ -72,7 +67,7 @@ public class HanUtils {
             }
         }
         return pinyinName.toString();
-    }
+    }*/
 
     public static String[] splitWithNonChineseChar(String text) {
         // 中文验证规则
